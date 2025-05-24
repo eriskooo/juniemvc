@@ -1,7 +1,7 @@
 package guru.springframework.juniemvc.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import guru.springframework.juniemvc.entities.Beer;
+import guru.springframework.juniemvc.models.BeerDto;
 import guru.springframework.juniemvc.services.BeerService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -37,11 +37,11 @@ class BeerControllerTest {
     @MockBean
     BeerService beerService;
 
-    Beer testBeer;
+    BeerDto testBeer;
 
     @BeforeEach
     void setUp() {
-        testBeer = Beer.builder()
+        testBeer = BeerDto.builder()
                 .id(1)
                 .beerName("Test Beer")
                 .beerStyle("IPA")
@@ -94,7 +94,7 @@ class BeerControllerTest {
     @Test
     void testCreateBeer() throws Exception {
         // Given
-        Beer beerToCreate = Beer.builder()
+        BeerDto beerToCreate = BeerDto.builder()
                 .beerName("New Beer")
                 .beerStyle("Stout")
                 .upc("654321")
@@ -102,7 +102,7 @@ class BeerControllerTest {
                 .quantityOnHand(200)
                 .build();
 
-        Beer savedBeer = Beer.builder()
+        BeerDto savedBeer = BeerDto.builder()
                 .id(2)
                 .beerName("New Beer")
                 .beerStyle("Stout")
@@ -111,7 +111,7 @@ class BeerControllerTest {
                 .quantityOnHand(200)
                 .build();
 
-        given(beerService.saveBeer(any(Beer.class))).willReturn(savedBeer);
+        given(beerService.saveBeer(any(BeerDto.class))).willReturn(savedBeer);
 
         // When/Then
         mockMvc.perform(post("/api/v1/beers")
@@ -125,7 +125,7 @@ class BeerControllerTest {
     @Test
     void testUpdateBeer() throws Exception {
         // Given
-        Beer beerToUpdate = Beer.builder()
+        BeerDto beerToUpdate = BeerDto.builder()
                 .beerName("Updated Beer")
                 .beerStyle("Lager")
                 .upc("789012")
@@ -133,7 +133,7 @@ class BeerControllerTest {
                 .quantityOnHand(150)
                 .build();
 
-        Beer updatedBeer = Beer.builder()
+        BeerDto updatedBeer = BeerDto.builder()
                 .id(1)
                 .beerName("Updated Beer")
                 .beerStyle("Lager")
@@ -143,7 +143,7 @@ class BeerControllerTest {
                 .build();
 
         given(beerService.getBeerById(1)).willReturn(Optional.of(testBeer));
-        given(beerService.saveBeer(any(Beer.class))).willReturn(updatedBeer);
+        given(beerService.saveBeer(any(BeerDto.class))).willReturn(updatedBeer);
 
         // When/Then
         mockMvc.perform(put("/api/v1/beers/1")
@@ -158,7 +158,7 @@ class BeerControllerTest {
     @Test
     void testUpdateBeerNotFound() throws Exception {
         // Given
-        Beer beerToUpdate = Beer.builder()
+        BeerDto beerToUpdate = BeerDto.builder()
                 .beerName("Updated Beer")
                 .beerStyle("Lager")
                 .upc("789012")
@@ -196,5 +196,24 @@ class BeerControllerTest {
         // When/Then
         mockMvc.perform(delete("/api/v1/beers/1"))
                 .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void testValidationErrors() throws Exception {
+        // Given
+        BeerDto invalidBeer = BeerDto.builder()
+                // Missing required fields
+                .beerName("")
+                .beerStyle("")
+                .upc("")
+                .price(new BigDecimal("-1.0"))
+                .quantityOnHand(-1)
+                .build();
+
+        // When/Then
+        mockMvc.perform(post("/api/v1/beers")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(invalidBeer)))
+                .andExpect(status().isBadRequest());
     }
 }

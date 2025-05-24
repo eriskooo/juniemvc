@@ -1,7 +1,8 @@
 package guru.springframework.juniemvc.controllers;
 
-import guru.springframework.juniemvc.entities.Beer;
+import guru.springframework.juniemvc.models.BeerDto;
 import guru.springframework.juniemvc.services.BeerService;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -27,7 +28,7 @@ public class BeerController {
      * @return List of all beers
      */
     @GetMapping
-    public List<Beer> getAllBeers() {
+    public List<BeerDto> getAllBeers() {
         return beerService.getAllBeers();
     }
 
@@ -37,8 +38,8 @@ public class BeerController {
      * @return ResponseEntity with the beer if found, or 404 Not Found
      */
     @GetMapping("/{id}")
-    public ResponseEntity<Beer> getBeerById(@PathVariable Integer id) {
-        Optional<Beer> beerOptional = beerService.getBeerById(id);
+    public ResponseEntity<BeerDto> getBeerById(@PathVariable Integer id) {
+        Optional<BeerDto> beerOptional = beerService.getBeerById(id);
 
         return beerOptional
                 .map(ResponseEntity::ok)
@@ -47,34 +48,34 @@ public class BeerController {
 
     /**
      * Create a new beer
-     * @param beer the beer to create
+     * @param beerDto the beer to create
      * @return ResponseEntity with the created beer and 201 Created status
      */
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public Beer createBeer(@RequestBody Beer beer) {
+    public BeerDto createBeer(@Valid @RequestBody BeerDto beerDto) {
         // Ensure a new beer is created, not an update
-        beer.setId(null);
-        return beerService.saveBeer(beer);
+        beerDto.setId(null);
+        return beerService.saveBeer(beerDto);
     }
 
     /**
      * Update an existing beer
      * @param id the beer ID
-     * @param beer the updated beer data
+     * @param beerDto the updated beer data
      * @return ResponseEntity with the updated beer if found, or 404 Not Found
      */
     @PutMapping("/{id}")
-    public ResponseEntity<Beer> updateBeer(@PathVariable Integer id, @RequestBody Beer beer) {
-        Optional<Beer> beerOptional = beerService.getBeerById(id);
+    public ResponseEntity<BeerDto> updateBeer(@PathVariable Integer id, @Valid @RequestBody BeerDto beerDto) {
+        Optional<BeerDto> beerOptional = beerService.getBeerById(id);
 
         if (beerOptional.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
 
         // Ensure we're updating the correct beer
-        beer.setId(id);
-        Beer updatedBeer = beerService.saveBeer(beer);
+        beerDto.setId(id);
+        BeerDto updatedBeer = beerService.saveBeer(beerDto);
         return ResponseEntity.ok(updatedBeer);
     }
 
@@ -85,7 +86,7 @@ public class BeerController {
      */
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteBeer(@PathVariable Integer id) {
-        Optional<Beer> beerOptional = beerService.getBeerById(id);
+        Optional<BeerDto> beerOptional = beerService.getBeerById(id);
 
         if (beerOptional.isEmpty()) {
             return ResponseEntity.notFound().build();
