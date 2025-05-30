@@ -15,8 +15,14 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @SuperBuilder
 public class BaseEntityDto {
+
+    //read only
     private Integer id;
     private Integer version;
+
+    //read only created date
     private LocalDateTime createdDate;
+
+    //read only update date
     private LocalDateTime updateDate;
 }

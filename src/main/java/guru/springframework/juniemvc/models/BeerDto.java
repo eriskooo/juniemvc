@@ -22,9 +22,11 @@ public class BeerDto extends BaseEntityDto {
     @NotBlank(message = "Beer name is required")
     private String beerName;
 
+    // style of the beer, ALE, PALE ALE, IPA, etc
     @NotBlank(message = "Beer style is required")
     private String beerStyle;
 
+    // Universal Product Code, a 13-digit number assigned to each unique beer product by the Federal Bar Association
     @NotBlank(message = "UPC is required")
     private String upc;
 
