@@ -195,3 +195,44 @@ logger.atDebug()
 * **Version Control for Database:** Migration scripts in the standard location are automatically detected and executed in version order when the application starts, providing version control for your database schema.
 * **Repeatable Migrations:** For migrations that can be re-run (like view or stored procedure definitions), use the `R__` prefix instead of `V__` (e.g., `R__create_views.sql`).
 * **Spring Boot Integration:** Spring Boot automatically configures Flyway when it's added as a dependency, detecting migration scripts in the default location without additional configuration.
+
+## 16. OpenAPI Specification Guidelines
+* Use a modular approach to organize your OpenAPI specification by splitting it into multiple files.
+* Store the main OpenAPI definition in `openapi/openapi/openapi.yaml` which references other files for paths and components.
+* Follow a consistent file naming convention that reflects the API path structure.
+* Define reusable components in separate files under appropriate directories.
+
+**API Documentation Structure:**
+
+* **Main File:** The root OpenAPI specification file (`openapi/openapi/openapi.yaml`) contains the API metadata, servers, security schemes, and references to path and component files.
+* **Path Files:** Individual API endpoints are defined in separate files under the `openapi/openapi/paths/` directory.
+* **Component Files:** Reusable schemas, responses, parameters, etc. are defined in separate files under the `openapi/openapi/components/` directory with appropriate subdirectories (e.g., `schemas/`, `responses/`).
+
+**File Naming Conventions:**
+
+* **Path Files:** Name path files according to the API endpoint they represent, replacing special characters with underscores:
+  * `/users/{username}` → `users_{username}.yaml`
+  * `/user` → `user.yaml`
+  * `/user/list` → `user-status.yaml`
+* **Component Files:** Name component files according to the entity they represent:
+  * User schema → `User.yaml`
+  * Email schema → `Email.yaml`
+
+**Component Definition:**
+
+* Use `$ref` to reference components from other files:
+  * From path files to schemas: `$ref: '../components/schemas/User.yaml'`
+  * Between component files: `$ref: './Email.yaml'`
+* Group related components in appropriate subdirectories (e.g., `schemas/`, `responses/`, `parameters/`).
+* Use relative paths for references to maintain portability.
+
+**Testing the OpenAPI Specification:**
+
+* Run `npm test` in the `openapi` directory to validate the OpenAPI specification.
+* This command executes `redocly lint` which checks for:
+  * Syntax errors
+  * Semantic errors
+  * Adherence to OpenAPI standards
+  * Broken references
+* Fix any reported issues before committing changes to the API specification.
+* You can also use `npm start` to preview the documentation and `npm run build` to bundle the specification into a single file.
