@@ -3,6 +3,7 @@ package guru.springframework.juniemvc.repositories;
 import guru.springframework.juniemvc.entities.Beer;
 import guru.springframework.juniemvc.entities.BeerOrder;
 import guru.springframework.juniemvc.entities.BeerOrderLine;
+import guru.springframework.juniemvc.entities.Customer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,8 +27,12 @@ class BeerOrderLineRepositoryTest {
     @Autowired
     BeerRepository beerRepository;
 
+    @Autowired
+    CustomerRepository customerRepository;
+
     private Beer testBeer;
     private BeerOrder testBeerOrder;
+    private Customer testCustomer;
 
     @BeforeEach
     void setUp() {
@@ -41,9 +46,21 @@ class BeerOrderLineRepositoryTest {
                 .build();
         testBeer = beerRepository.save(testBeer);
 
+        // Create and save a test customer
+        testCustomer = Customer.builder()
+                .name("Test Customer")
+                .email("test@example.com")
+                .phoneNumber("555-123-4567")
+                .addressLine1("123 Main St")
+                .city("Springfield")
+                .state("IL")
+                .postalCode("62701")
+                .build();
+        testCustomer = customerRepository.save(testCustomer);
+
         // Create and save a test beer order
         testBeerOrder = BeerOrder.builder()
-                .customerRef("Test Customer")
+                .customer(testCustomer)
                 .paymentAmount(new BigDecimal("25.98"))
                 .status("NEW")
                 .build();

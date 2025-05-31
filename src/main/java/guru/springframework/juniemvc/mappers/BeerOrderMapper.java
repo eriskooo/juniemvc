@@ -10,14 +10,14 @@ import org.mapstruct.Mapping;
 /**
  * Mapper for BeerOrder entity and BeerOrderDto
  */
-@Mapper(uses = {BeerOrderLineMapper.class})
+@Mapper(uses = {BeerOrderLineMapper.class, CustomerMapper.class})
 public interface BeerOrderMapper {
-    
+
     BeerOrderDto beerOrderToBeerOrderDto(BeerOrder beerOrder);
-    
+
     @Mapping(target = "beerOrderLines", ignore = true)
     BeerOrder beerOrderDtoToBeerOrder(BeerOrderDto beerOrderDto);
-    
+
     /**
      * Add beer order lines to beer order
      * @param beerOrder the beer order

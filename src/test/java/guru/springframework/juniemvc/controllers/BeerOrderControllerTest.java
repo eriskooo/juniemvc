@@ -3,6 +3,7 @@ package guru.springframework.juniemvc.controllers;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import guru.springframework.juniemvc.models.BeerOrderDto;
 import guru.springframework.juniemvc.models.BeerOrderLineDto;
+import guru.springframework.juniemvc.models.CustomerDto;
 import guru.springframework.juniemvc.services.BeerOrderService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -42,9 +43,22 @@ class BeerOrderControllerTest {
 
     BeerOrderDto testBeerOrder;
     BeerOrderLineDto testBeerOrderLine;
+    CustomerDto testCustomerDto;
 
     @BeforeEach
     void setUp() {
+        // Create test customer DTO
+        testCustomerDto = CustomerDto.builder()
+                .id(1)
+                .name("Test Customer")
+                .email("test@example.com")
+                .phoneNumber("555-123-4567")
+                .addressLine1("123 Main St")
+                .city("Springfield")
+                .state("IL")
+                .postalCode("62701")
+                .build();
+
         // Create test beer order line
         testBeerOrderLine = BeerOrderLineDto.builder()
                 .id(1)
@@ -62,7 +76,7 @@ class BeerOrderControllerTest {
         lines.add(testBeerOrderLine);
         testBeerOrder = BeerOrderDto.builder()
                 .id(1)
-                .customerRef("Test Customer")
+                .customer(testCustomerDto)
                 .paymentAmount(new BigDecimal("25.98"))
                 .status("NEW")
                 .beerOrderLines(lines)
@@ -81,7 +95,7 @@ class BeerOrderControllerTest {
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$", hasSize(1)))
                 .andExpect(jsonPath("$[0].id", is(1)))
-                .andExpect(jsonPath("$[0].customerRef", is("Test Customer")));
+                .andExpect(jsonPath("$[0].customer.name", is("Test Customer")));
     }
 
     @Test
@@ -95,7 +109,7 @@ class BeerOrderControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.id", is(1)))
-                .andExpect(jsonPath("$.customerRef", is("Test Customer")))
+                .andExpect(jsonPath("$.customer.name", is("Test Customer")))
                 .andExpect(jsonPath("$.beerOrderLines", hasSize(1)));
     }
 
@@ -113,8 +127,19 @@ class BeerOrderControllerTest {
     @Test
     void testCreateBeerOrder() throws Exception {
         // Given
+        CustomerDto newCustomerDto = CustomerDto.builder()
+                .id(2)
+                .name("New Customer")
+                .email("new@example.com")
+                .phoneNumber("555-987-6543")
+                .addressLine1("456 Oak Ave")
+                .city("Shelbyville")
+                .state("IL")
+                .postalCode("62565")
+                .build();
+
         BeerOrderDto beerOrderToCreate = BeerOrderDto.builder()
-                .customerRef("New Customer")
+                .customer(newCustomerDto)
                 .paymentAmount(new BigDecimal("39.97"))
                 .status("NEW")
                 .beerOrderLines(new HashSet<>())
@@ -134,7 +159,7 @@ class BeerOrderControllerTest {
 
         BeerOrderDto savedBeerOrder = BeerOrderDto.builder()
                 .id(2)
-                .customerRef("New Customer")
+                .customer(newCustomerDto)
                 .paymentAmount(new BigDecimal("39.97"))
                 .status("NEW")
                 .beerOrderLines(beerOrderToCreate.getBeerOrderLines())
@@ -148,14 +173,25 @@ class BeerOrderControllerTest {
                 .content(objectMapper.writeValueAsString(beerOrderToCreate)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id", is(2)))
-                .andExpect(jsonPath("$.customerRef", is("New Customer")));
+                .andExpect(jsonPath("$.customer.name", is("New Customer")));
     }
 
     @Test
     void testUpdateBeerOrder() throws Exception {
         // Given
+        CustomerDto updatedCustomerDto = CustomerDto.builder()
+                .id(1)
+                .name("Updated Customer")
+                .email("updated@example.com")
+                .phoneNumber("555-111-2222")
+                .addressLine1("789 Pine St")
+                .city("Capital City")
+                .state("IL")
+                .postalCode("62701")
+                .build();
+
         BeerOrderDto beerOrderToUpdate = BeerOrderDto.builder()
-                .customerRef("Updated Customer")
+                .customer(updatedCustomerDto)
                 .paymentAmount(new BigDecimal("39.97"))
                 .status("PROCESSING")
                 .beerOrderLines(new HashSet<>())
@@ -175,7 +211,7 @@ class BeerOrderControllerTest {
 
         BeerOrderDto updatedBeerOrder = BeerOrderDto.builder()
                 .id(1)
-                .customerRef("Updated Customer")
+                .customer(updatedCustomerDto)
                 .paymentAmount(new BigDecimal("39.97"))
                 .status("PROCESSING")
                 .beerOrderLines(beerOrderToUpdate.getBeerOrderLines())
@@ -190,15 +226,26 @@ class BeerOrderControllerTest {
                 .content(objectMapper.writeValueAsString(beerOrderToUpdate)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id", is(1)))
-                .andExpect(jsonPath("$.customerRef", is("Updated Customer")))
+                .andExpect(jsonPath("$.customer.name", is("Updated Customer")))
                 .andExpect(jsonPath("$.status", is("PROCESSING")));
     }
 
     @Test
     void testUpdateBeerOrderNotFound() throws Exception {
         // Given
+        CustomerDto updatedCustomerDto = CustomerDto.builder()
+                .id(1)
+                .name("Updated Customer")
+                .email("updated@example.com")
+                .phoneNumber("555-111-2222")
+                .addressLine1("789 Pine St")
+                .city("Capital City")
+                .state("IL")
+                .postalCode("62701")
+                .build();
+
         BeerOrderDto beerOrderToUpdate = BeerOrderDto.builder()
-                .customerRef("Updated Customer")
+                .customer(updatedCustomerDto)
                 .paymentAmount(new BigDecimal("39.97"))
                 .status("PROCESSING")
                 .beerOrderLines(new HashSet<>())
@@ -251,8 +298,19 @@ class BeerOrderControllerTest {
     @Test
     void testValidationErrors() throws Exception {
         // Given
+        CustomerDto invalidCustomerDto = CustomerDto.builder()
+                .id(3)
+                .name("Invalid Customer")
+                .email("invalid@example.com")
+                .phoneNumber("555-333-4444")
+                .addressLine1("999 Invalid St")
+                .city("Invalid City")
+                .state("XX")
+                .postalCode("99999")
+                .build();
+
         BeerOrderDto invalidBeerOrder = BeerOrderDto.builder()
-                .customerRef("Invalid Customer")
+                .customer(invalidCustomerDto)
                 .paymentAmount(new BigDecimal("-10.00")) // Invalid: negative amount
                 .status("NEW")
                 .beerOrderLines(new HashSet<>()) // Invalid: empty order lines

@@ -3,10 +3,12 @@ package guru.springframework.juniemvc.services;
 import guru.springframework.juniemvc.entities.Beer;
 import guru.springframework.juniemvc.entities.BeerOrder;
 import guru.springframework.juniemvc.entities.BeerOrderLine;
+import guru.springframework.juniemvc.entities.Customer;
 import guru.springframework.juniemvc.mappers.BeerOrderLineMapper;
 import guru.springframework.juniemvc.mappers.BeerOrderMapper;
 import guru.springframework.juniemvc.models.BeerOrderDto;
 import guru.springframework.juniemvc.models.BeerOrderLineDto;
+import guru.springframework.juniemvc.models.CustomerDto;
 import guru.springframework.juniemvc.repositories.BeerOrderRepository;
 import guru.springframework.juniemvc.repositories.BeerRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -53,6 +55,8 @@ class BeerOrderServiceImplTest {
     Beer testBeer;
     BeerOrderLine testBeerOrderLine;
     BeerOrderLineDto testBeerOrderLineDto;
+    Customer testCustomer;
+    CustomerDto testCustomerDto;
 
     @BeforeEach
     void setUp() {
@@ -66,6 +70,30 @@ class BeerOrderServiceImplTest {
                 .build();
         testBeer.setId(1);
 
+        // Create test customer
+        testCustomer = Customer.builder()
+                .name("Test Customer")
+                .email("test@example.com")
+                .phoneNumber("555-123-4567")
+                .addressLine1("123 Main St")
+                .city("Springfield")
+                .state("IL")
+                .postalCode("62701")
+                .build();
+        testCustomer.setId(1);
+
+        // Create test customer DTO
+        testCustomerDto = CustomerDto.builder()
+                .id(1)
+                .name("Test Customer")
+                .email("test@example.com")
+                .phoneNumber("555-123-4567")
+                .addressLine1("123 Main St")
+                .city("Springfield")
+                .state("IL")
+                .postalCode("62701")
+                .build();
+
         // Create test beer order line
         testBeerOrderLine = BeerOrderLine.builder()
                 .orderQuantity(2)
@@ -77,7 +105,7 @@ class BeerOrderServiceImplTest {
 
         // Create test beer order
         testBeerOrder = BeerOrder.builder()
-                .customerRef("Test Customer")
+                .customer(testCustomer)
                 .paymentAmount(new BigDecimal("25.98"))
                 .status("NEW")
                 .build();
@@ -101,7 +129,7 @@ class BeerOrderServiceImplTest {
         lines.add(testBeerOrderLineDto);
         testBeerOrderDto = BeerOrderDto.builder()
                 .id(1)
-                .customerRef("Test Customer")
+                .customer(testCustomerDto)
                 .paymentAmount(new BigDecimal("25.98"))
                 .status("NEW")
                 .beerOrderLines(lines)
@@ -119,7 +147,8 @@ class BeerOrderServiceImplTest {
 
         // Then
         assertThat(beerOrders).hasSize(1);
-        assertThat(beerOrders.get(0).getCustomerRef()).isEqualTo("Test Customer");
+        assertThat(beerOrders.get(0).getCustomer()).isNotNull();
+        assertThat(beerOrders.get(0).getCustomer().getName()).isEqualTo("Test Customer");
         verify(beerOrderRepository, times(1)).findAll();
         verify(beerOrderMapper, times(1)).beerOrderToBeerOrderDto(any(BeerOrder.class));
     }
@@ -135,7 +164,8 @@ class BeerOrderServiceImplTest {
 
         // Then
         assertThat(beerOrderOptional).isPresent();
-        assertThat(beerOrderOptional.get().getCustomerRef()).isEqualTo("Test Customer");
+        assertThat(beerOrderOptional.get().getCustomer()).isNotNull();
+        assertThat(beerOrderOptional.get().getCustomer().getName()).isEqualTo("Test Customer");
         verify(beerOrderRepository, times(1)).findById(1);
         verify(beerOrderMapper, times(1)).beerOrderToBeerOrderDto(any(BeerOrder.class));
     }
@@ -167,7 +197,8 @@ class BeerOrderServiceImplTest {
 
         // Then
         assertThat(savedBeerOrderDto).isNotNull();
-        assertThat(savedBeerOrderDto.getCustomerRef()).isEqualTo("Test Customer");
+        assertThat(savedBeerOrderDto.getCustomer()).isNotNull();
+        assertThat(savedBeerOrderDto.getCustomer().getName()).isEqualTo("Test Customer");
         verify(beerOrderMapper, times(1)).beerOrderDtoToBeerOrder(any(BeerOrderDto.class));
         verify(beerOrderRepository, times(1)).save(any(BeerOrder.class));
         verify(beerOrderMapper, times(1)).beerOrderToBeerOrderDto(any(BeerOrder.class));

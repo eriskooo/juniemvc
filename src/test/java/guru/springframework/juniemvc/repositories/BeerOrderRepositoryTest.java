@@ -3,6 +3,7 @@ package guru.springframework.juniemvc.repositories;
 import guru.springframework.juniemvc.entities.Beer;
 import guru.springframework.juniemvc.entities.BeerOrder;
 import guru.springframework.juniemvc.entities.BeerOrderLine;
+import guru.springframework.juniemvc.entities.Customer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,7 +24,11 @@ class BeerOrderRepositoryTest {
     @Autowired
     BeerRepository beerRepository;
 
+    @Autowired
+    CustomerRepository customerRepository;
+
     private Beer testBeer;
+    private Customer testCustomer;
 
     @BeforeEach
     void setUp() {
@@ -36,13 +41,25 @@ class BeerOrderRepositoryTest {
                 .quantityOnHand(100)
                 .build();
         testBeer = beerRepository.save(testBeer);
+
+        // Create and save a test customer
+        testCustomer = Customer.builder()
+                .name("Test Customer")
+                .email("test@example.com")
+                .phoneNumber("555-123-4567")
+                .addressLine1("123 Main St")
+                .city("Springfield")
+                .state("IL")
+                .postalCode("62701")
+                .build();
+        testCustomer = customerRepository.save(testCustomer);
     }
 
     @Test
     void testSaveBeerOrder() {
         // Given
         BeerOrder beerOrder = BeerOrder.builder()
-                .customerRef("Test Customer")
+                .customer(testCustomer)
                 .paymentAmount(new BigDecimal("25.98"))
                 .status("NEW")
                 .build();
@@ -70,7 +87,7 @@ class BeerOrderRepositoryTest {
     void testGetBeerOrderById() {
         // Given
         BeerOrder beerOrder = BeerOrder.builder()
-                .customerRef("Test Customer")
+                .customer(testCustomer)
                 .paymentAmount(new BigDecimal("25.98"))
                 .status("NEW")
                 .build();
@@ -91,7 +108,8 @@ class BeerOrderRepositoryTest {
         // Then
         assertThat(fetchedBeerOrderOptional).isPresent();
         BeerOrder fetchedBeerOrder = fetchedBeerOrderOptional.get();
-        assertThat(fetchedBeerOrder.getCustomerRef()).isEqualTo("Test Customer");
+        assertThat(fetchedBeerOrder.getCustomer()).isNotNull();
+        assertThat(fetchedBeerOrder.getCustomer().getName()).isEqualTo(testCustomer.getName());
         assertThat(fetchedBeerOrder.getBeerOrderLines()).hasSize(1);
     }
 
@@ -99,7 +117,7 @@ class BeerOrderRepositoryTest {
     void testUpdateBeerOrder() {
         // Given
         BeerOrder beerOrder = BeerOrder.builder()
-                .customerRef("Original Customer")
+                .customer(testCustomer)
                 .paymentAmount(new BigDecimal("25.98"))
                 .status("NEW")
                 .build();
@@ -115,12 +133,25 @@ class BeerOrderRepositoryTest {
         BeerOrder savedBeerOrder = beerOrderRepository.save(beerOrder);
 
         // When
-        savedBeerOrder.setCustomerRef("Updated Customer");
+        // Create a new customer for the update
+        Customer updatedCustomer = Customer.builder()
+                .name("Updated Customer")
+                .email("updated@example.com")
+                .phoneNumber("555-987-6543")
+                .addressLine1("456 Oak Ave")
+                .city("Shelbyville")
+                .state("IL")
+                .postalCode("62565")
+                .build();
+        updatedCustomer = customerRepository.save(updatedCustomer);
+
+        savedBeerOrder.setCustomer(updatedCustomer);
         savedBeerOrder.setStatus("PROCESSING");
         BeerOrder updatedBeerOrder = beerOrderRepository.save(savedBeerOrder);
 
         // Then
-        assertThat(updatedBeerOrder.getCustomerRef()).isEqualTo("Updated Customer");
+        assertThat(updatedBeerOrder.getCustomer()).isNotNull();
+        assertThat(updatedBeerOrder.getCustomer().getName()).isEqualTo("Updated Customer");
         assertThat(updatedBeerOrder.getStatus()).isEqualTo("PROCESSING");
     }
 
@@ -128,7 +159,7 @@ class BeerOrderRepositoryTest {
     void testDeleteBeerOrder() {
         // Given
         BeerOrder beerOrder = BeerOrder.builder()
-                .customerRef("Delete Me")
+                .customer(testCustomer)
                 .paymentAmount(new BigDecimal("25.98"))
                 .status("NEW")
                 .build();
@@ -155,9 +186,33 @@ class BeerOrderRepositoryTest {
     void testListBeerOrders() {
         // Given
         beerOrderRepository.deleteAll(); // Clear any existing data
+        customerRepository.deleteAll(); // Clear any existing customers
+
+        // Create two test customers
+        Customer customer1 = Customer.builder()
+                .name("Customer 1")
+                .email("customer1@example.com")
+                .phoneNumber("555-111-1111")
+                .addressLine1("111 First St")
+                .city("Springfield")
+                .state("IL")
+                .postalCode("62701")
+                .build();
+        customer1 = customerRepository.save(customer1);
+
+        Customer customer2 = Customer.builder()
+                .name("Customer 2")
+                .email("customer2@example.com")
+                .phoneNumber("555-222-2222")
+                .addressLine1("222 Second St")
+                .city("Shelbyville")
+                .state("IL")
+                .postalCode("62565")
+                .build();
+        customer2 = customerRepository.save(customer2);
 
         BeerOrder beerOrder1 = BeerOrder.builder()
-                .customerRef("Customer 1")
+                .customer(customer1)
                 .paymentAmount(new BigDecimal("25.98"))
                 .status("NEW")
                 .build();
@@ -172,7 +227,7 @@ class BeerOrderRepositoryTest {
         beerOrder1.addBeerOrderLine(beerOrderLine1);
 
         BeerOrder beerOrder2 = BeerOrder.builder()
-                .customerRef("Customer 2")
+                .customer(customer2)
                 .paymentAmount(new BigDecimal("39.97"))
                 .status("PROCESSING")
                 .build();

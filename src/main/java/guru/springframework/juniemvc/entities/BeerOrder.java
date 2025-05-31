@@ -3,6 +3,8 @@ package guru.springframework.juniemvc.entities;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -27,7 +29,9 @@ import java.util.Set;
 @Builder
 public class BeerOrder extends BaseEntity {
 
-    private String customerRef;
+    @ManyToOne
+    @JoinColumn(name = "customer_id")
+    private Customer customer;
 
     @Column(precision = 19, scale = 2)
     private BigDecimal paymentAmount;

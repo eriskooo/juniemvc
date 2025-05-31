@@ -3,8 +3,10 @@ package guru.springframework.juniemvc.mappers;
 import guru.springframework.juniemvc.entities.Beer;
 import guru.springframework.juniemvc.entities.BeerOrder;
 import guru.springframework.juniemvc.entities.BeerOrderLine;
+import guru.springframework.juniemvc.entities.Customer;
 import guru.springframework.juniemvc.models.BeerOrderDto;
 import guru.springframework.juniemvc.models.BeerOrderLineDto;
+import guru.springframework.juniemvc.models.CustomerDto;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mapstruct.factory.Mappers;
@@ -21,15 +23,43 @@ class BeerOrderMapperTest {
 
     private BeerOrderMapper beerOrderMapper;
     private BeerOrderLineMapper beerOrderLineMapper;
+    private CustomerMapper customerMapper;
     private BeerOrder testBeerOrder;
     private Beer testBeer;
+    private Customer testCustomer;
+    private CustomerDto testCustomerDto;
 
     @BeforeEach
     void setUp() {
         beerOrderMapper = Mappers.getMapper(BeerOrderMapper.class);
         beerOrderLineMapper = Mappers.getMapper(BeerOrderLineMapper.class);
+        customerMapper = Mappers.getMapper(CustomerMapper.class);
 
         ReflectionTestUtils.setField(beerOrderMapper, "beerOrderLineMapper", beerOrderLineMapper);
+        ReflectionTestUtils.setField(beerOrderMapper, "customerMapper", customerMapper);
+
+        // Create test customer
+        testCustomer = Customer.builder()
+                .name("Test Customer")
+                .email("test@example.com")
+                .phoneNumber("555-123-4567")
+                .addressLine1("123 Main St")
+                .city("Springfield")
+                .state("IL")
+                .postalCode("62701")
+                .build();
+        testCustomer.setId(1);
+
+        testCustomerDto = CustomerDto.builder()
+                .id(1)
+                .name("Test Customer")
+                .email("test@example.com")
+                .phoneNumber("555-123-4567")
+                .addressLine1("123 Main St")
+                .city("Springfield")
+                .state("IL")
+                .postalCode("62701")
+                .build();
 
         // Create test beer
         testBeer = Beer.builder()
@@ -43,7 +73,7 @@ class BeerOrderMapperTest {
 
         // Create test beer order
         testBeerOrder = BeerOrder.builder()
-                .customerRef("Test Customer")
+                .customer(testCustomer)
                 .paymentAmount(new BigDecimal("25.98"))
                 .status("NEW")
                 .build();
@@ -56,9 +86,9 @@ class BeerOrderMapperTest {
                 .orderQuantity(2)
                 .quantityAllocated(2)
                 .status("ALLOCATED")
-                .beer(testBeer)
                 .build();
         testBeerOrderLine.setId(1);
+        testBeerOrderLine.setBeer(testBeer);
 
         // Add beer order line to beer order
         testBeerOrder.addBeerOrderLine(testBeerOrderLine);
@@ -72,7 +102,8 @@ class BeerOrderMapperTest {
         // Then
         assertThat(beerOrderDto).isNotNull();
         assertThat(beerOrderDto.getId()).isEqualTo(testBeerOrder.getId());
-        assertThat(beerOrderDto.getCustomerRef()).isEqualTo(testBeerOrder.getCustomerRef());
+        assertThat(beerOrderDto.getCustomer()).isNotNull();
+        assertThat(beerOrderDto.getCustomer().getName()).isEqualTo(testCustomer.getName());
         assertThat(beerOrderDto.getPaymentAmount()).isEqualTo(testBeerOrder.getPaymentAmount());
         assertThat(beerOrderDto.getStatus()).isEqualTo(testBeerOrder.getStatus());
         assertThat(beerOrderDto.getBeerOrderLines()).hasSize(1);
@@ -92,7 +123,7 @@ class BeerOrderMapperTest {
         // Given
         BeerOrderDto beerOrderDto = BeerOrderDto.builder()
                 .id(2)
-                .customerRef("New Customer")
+                .customer(testCustomerDto)
                 .paymentAmount(new BigDecimal("39.97"))
                 .status("PENDING")
                 .beerOrderLines(new HashSet<>())
@@ -118,7 +149,8 @@ class BeerOrderMapperTest {
         // Then
         assertThat(beerOrder).isNotNull();
         assertThat(beerOrder.getId()).isNull(); // ID should be ignored in mapping
-        assertThat(beerOrder.getCustomerRef()).isEqualTo(beerOrderDto.getCustomerRef());
+        assertThat(beerOrder.getCustomer()).isNotNull();
+        assertThat(beerOrder.getCustomer().getName()).isEqualTo(testCustomer.getName());
         assertThat(beerOrder.getPaymentAmount()).isEqualTo(beerOrderDto.getPaymentAmount());
         assertThat(beerOrder.getStatus()).isEqualTo(beerOrderDto.getStatus());
         assertThat(beerOrder.getBeerOrderLines()).hasSize(1);
