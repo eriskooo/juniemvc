@@ -22,13 +22,15 @@ import java.util.Set;
 @SuperBuilder
 @EqualsAndHashCode(callSuper = true)
 public class BeerOrderDto extends BaseEntityDto {
-    
+
+    //reference information from customer
     private String customerRef;
     
     @NotNull(message = "Payment amount is required")
     @Positive(message = "Payment amount must be positive")
     private BigDecimal paymentAmount;
-    
+
+    // enum status of the order, NEW, PAID, CANCELLED, INPROCESS, COMPLETE.
     private String status;
     
     @NotEmpty(message = "Beer order must have at least one beer order line")
