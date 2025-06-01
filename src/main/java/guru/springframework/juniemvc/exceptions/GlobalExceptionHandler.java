@@ -79,6 +79,22 @@ public class GlobalExceptionHandler {
     }
 
     /**
+     * Handle NotFoundException
+     */
+    @ExceptionHandler(NotFoundException.class)
+    public ResponseEntity<ProblemDetails> handleNotFoundException(NotFoundException ex, WebRequest request) {
+        ProblemDetails problemDetails = ProblemDetails.builder()
+                .type(URI.create(PROBLEM_BASE_URL + "/not-found"))
+                .title("Resource Not Found")
+                .status(HttpStatus.NOT_FOUND.value())
+                .detail(ex.getMessage())
+                .instance(URI.create(request.getContextPath()))
+                .build();
+
+        return new ResponseEntity<>(problemDetails, HttpStatus.NOT_FOUND);
+    }
+
+    /**
      * Handle all other exceptions
      */
     @ExceptionHandler(Exception.class)

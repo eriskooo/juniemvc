@@ -1,6 +1,7 @@
 package guru.springframework.juniemvc.services;
 
 import guru.springframework.juniemvc.entities.Customer;
+import guru.springframework.juniemvc.exceptions.NotFoundException;
 import guru.springframework.juniemvc.mappers.CustomerMapper;
 import guru.springframework.juniemvc.models.CustomerDto;
 import guru.springframework.juniemvc.repositories.CustomerRepository;
@@ -51,13 +52,14 @@ public class CustomerServiceImpl implements CustomerService {
     @Override
     @Transactional
     public Optional<CustomerDto> updateCustomer(Integer id, CustomerDto customerDto) {
-        if (!customerRepository.existsById(id)) {
-            return Optional.empty();
-        }
-        
-        customerDto.setId(id);
-        Customer customer = customerMapper.customerDtoToCustomer(customerDto);
-        Customer savedCustomer = customerRepository.save(customer);
+        Customer existingCustomer = customerRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Customer not found with id: " + id));
+
+        // Update properties from DTO to existing entity using mapper
+        customerMapper.updateCustomerFromDto(customerDto, existingCustomer);
+
+        // Save the updated entity
+        Customer savedCustomer = customerRepository.save(existingCustomer);
         return Optional.of(customerMapper.customerToCustomerDto(savedCustomer));
     }
 

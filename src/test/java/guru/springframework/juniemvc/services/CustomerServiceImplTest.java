@@ -1,6 +1,7 @@
 package guru.springframework.juniemvc.services;
 
 import guru.springframework.juniemvc.entities.Customer;
+import guru.springframework.juniemvc.exceptions.NotFoundException;
 import guru.springframework.juniemvc.mappers.CustomerMapper;
 import guru.springframework.juniemvc.models.CustomerDto;
 import guru.springframework.juniemvc.repositories.CustomerRepository;
@@ -16,6 +17,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.times;
@@ -143,6 +145,18 @@ class CustomerServiceImplTest {
                 .postalCode("62701")
                 .build();
 
+        Customer existingCustomer = Customer.builder()
+                .name("John Doe")
+                .email("john.doe@example.com")
+                .phoneNumber("555-123-4567")
+                .addressLine1("123 Main St")
+                .addressLine2("Apt 4B")
+                .city("Springfield")
+                .state("IL")
+                .postalCode("62701")
+                .build();
+        existingCustomer.setId(1);
+
         Customer updatedCustomer = Customer.builder()
                 .name("John Doe Updated")
                 .email("john.updated@example.com")
@@ -167,8 +181,7 @@ class CustomerServiceImplTest {
                 .postalCode("62701")
                 .build();
 
-        when(customerRepository.existsById(1)).thenReturn(true);
-        when(customerMapper.customerDtoToCustomer(any(CustomerDto.class))).thenReturn(updatedCustomer);
+        when(customerRepository.findById(1)).thenReturn(Optional.of(existingCustomer));
         when(customerRepository.save(any(Customer.class))).thenReturn(updatedCustomer);
         when(customerMapper.customerToCustomerDto(updatedCustomer)).thenReturn(updatedDto);
 
@@ -179,8 +192,8 @@ class CustomerServiceImplTest {
         assertThat(result).isPresent();
         assertThat(result.get().getName()).isEqualTo("John Doe Updated");
         assertThat(result.get().getEmail()).isEqualTo("john.updated@example.com");
-        verify(customerRepository, times(1)).existsById(1);
-        verify(customerMapper, times(1)).customerDtoToCustomer(any(CustomerDto.class));
+        verify(customerRepository, times(1)).findById(1);
+        verify(customerMapper, times(1)).updateCustomerFromDto(any(CustomerDto.class), any(Customer.class));
         verify(customerRepository, times(1)).save(any(Customer.class));
         verify(customerMapper, times(1)).customerToCustomerDto(any(Customer.class));
     }
@@ -188,15 +201,19 @@ class CustomerServiceImplTest {
     @Test
     void updateCustomerNotFound() {
         // Given
-        when(customerRepository.existsById(1)).thenReturn(false);
+        when(customerRepository.findById(1)).thenReturn(Optional.empty());
 
-        // When
-        Optional<CustomerDto> result = customerService.updateCustomer(1, testCustomerDto);
+        // When/Then
+        NotFoundException exception = assertThrows(NotFoundException.class, () -> {
+            customerService.updateCustomer(1, testCustomerDto);
+        });
 
-        // Then
-        assertThat(result).isEmpty();
-        verify(customerRepository, times(1)).existsById(1);
-        verify(customerMapper, times(0)).customerDtoToCustomer(any(CustomerDto.class));
+        // Verify exception message
+        assertThat(exception.getMessage()).contains("Customer not found with id: 1");
+
+        // Verify repository was called
+        verify(customerRepository, times(1)).findById(1);
+        verify(customerMapper, times(0)).updateCustomerFromDto(any(CustomerDto.class), any(Customer.class));
         verify(customerRepository, times(0)).save(any(Customer.class));
     }
 
