@@ -72,6 +72,10 @@ paths:
     $ref: 'paths/beer-orders.yaml'
   '/api/v1/beer-orders/{id}':
     $ref: 'paths/beer-orders_{id}.yaml'
+  '/api/v1/beer-orders/{beerOrderId}/shipments':
+    $ref: 'paths/beer-orders_{beerOrderId}_shipments.yaml'
+  '/api/v1/beer-orders/{beerOrderId}/shipments/{shipmentId}':
+    $ref: 'paths/beer-orders_{beerOrderId}_shipments_{shipmentId}.yaml'
   '/api/v1/customers':
     $ref: 'paths/customers.yaml'
   '/api/v1/customers/{id}':
