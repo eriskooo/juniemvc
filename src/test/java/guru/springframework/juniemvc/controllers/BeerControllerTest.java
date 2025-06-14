@@ -2,6 +2,7 @@ package guru.springframework.juniemvc.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import guru.springframework.juniemvc.models.BeerDto;
+import guru.springframework.juniemvc.models.BeerPatchDto;
 import guru.springframework.juniemvc.services.BeerService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -327,5 +328,51 @@ class BeerControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(invalidBeer)))
                 .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void testPatchBeer() throws Exception {
+        // Given
+        BeerPatchDto beerPatchDto = BeerPatchDto.builder()
+                .beerName("Patched Beer")
+                .price(new BigDecimal("15.99"))
+                .build();
+
+        BeerDto patchedBeer = BeerDto.builder()
+                .id(1)
+                .beerName("Patched Beer")
+                .beerStyle("IPA") // Original value
+                .upc("123456") // Original value
+                .price(new BigDecimal("15.99")) // Updated value
+                .quantityOnHand(100) // Original value
+                .build();
+
+        given(beerService.patchBeer(eq(1), any(BeerPatchDto.class))).willReturn(Optional.of(patchedBeer));
+
+        // When/Then
+        mockMvc.perform(patch("/api/v1/beers/1")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(beerPatchDto)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id", is(1)))
+                .andExpect(jsonPath("$.beerName", is("Patched Beer")))
+                .andExpect(jsonPath("$.beerStyle", is("IPA")))
+                .andExpect(jsonPath("$.price", is(15.99)));
+    }
+
+    @Test
+    void testPatchBeerNotFound() throws Exception {
+        // Given
+        BeerPatchDto beerPatchDto = BeerPatchDto.builder()
+                .beerName("Patched Beer")
+                .build();
+
+        given(beerService.patchBeer(eq(1), any(BeerPatchDto.class))).willReturn(Optional.empty());
+
+        // When/Then
+        mockMvc.perform(patch("/api/v1/beers/1")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(beerPatchDto)))
+                .andExpect(status().isNotFound());
     }
 }
