@@ -1,13 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Plus } from 'lucide-react';
 import { PageContainer, PageHeader, PageContent } from '@components/layout';
 import { DataTable, TableFilters, TableActions, createCommonActions } from '@components/tables';
 import { Button } from '@components/ui';
-import { useToast, useConfirmationDialog } from '@hooks';
-import { beerOrderService } from '../../services/beerOrderService';
-import type { BeerOrderDto } from '../../api/models';
-import type { Column, FilterValue } from '@components/tables';
+import { useToast, useConfirmationDialog } from '../../hooks';
+import beerOrderService from '../../services/beerOrderService';
+import type { BeerOrderDto } from '../../api';
+import type { Column, FilterValue, SortConfig } from '@components/tables';
 
 /**
  * Beer order listing page with pagination, filtering, and actions
@@ -16,7 +16,7 @@ const BeerOrderListPage: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { success, error } = useToast();
-  const { dialogState, confirmDelete } = useConfirmationDialog();
+  const { confirmDelete } = useConfirmationDialog();
 
   const [beerOrders, setBeerOrders] = useState<BeerOrderDto[]>([]);
   const [loading, setLoading] = useState(true);
@@ -26,31 +26,24 @@ const BeerOrderListPage: React.FC = () => {
     total: 0,
   });
   const [filters, setFilters] = useState<FilterValue[]>([]);
-  const [sortConfig, setSortConfig] = useState({ key: 'createdDate', direction: 'desc' as const });
+  const [sortConfig, setSortConfig] = useState<SortConfig>({
+    key: 'createdDate',
+    direction: 'desc',
+  });
 
   // Get customerId from URL query params if it exists
   const customerId = searchParams.get('customerId');
 
   // Load beer orders data
-  const loadBeerOrders = async () => {
+  const loadBeerOrders = useCallback(async () => {
     setLoading(true);
     try {
-      // Extract filter values
-      const searchFilter = filters.find(f => f.key === 'search');
-      const statusFilter = filters.find(f => f.key === 'orderStatus');
+      const response = await beerOrderService.getBeerOrders();
 
-      const response = await beerOrderService.getAllBeerOrders(
-        searchFilter?.value,
-        statusFilter?.value,
-        customerId ? Number(customerId) : undefined,
-        pagination.page - 1, // API uses 0-based pagination
-        pagination.pageSize
-      );
-
-      setBeerOrders(response.content || []);
+      setBeerOrders(response || []);
       setPagination(prev => ({
         ...prev,
-        total: response.totalElements || 0,
+        total: response?.length || 0,
       }));
     } catch (err) {
       error('Failed to load beer orders');
@@ -58,12 +51,12 @@ const BeerOrderListPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [error]);
 
   // Load data on component mount and when dependencies change
   useEffect(() => {
     loadBeerOrders();
-  }, [pagination.page, pagination.pageSize, filters, sortConfig, customerId]);
+  }, [loadBeerOrders]);
 
   // Handle page change
   const handlePageChange = (page: number) => {
@@ -107,7 +100,7 @@ const BeerOrderListPage: React.FC = () => {
             onClick={() => navigate(`/beer-orders/${order.id}`)}
             className="text-primary hover:underline"
           >
-            #{value}
+            #{String(value)}
           </button>
         </div>
       ),
@@ -118,8 +111,8 @@ const BeerOrderListPage: React.FC = () => {
       sortable: true,
       render: (value, order) => (
         <div>
-          <div className="font-medium">{order.customerName || 'Unknown'}</div>
-          <div className="text-sm text-gray-500">{value}</div>
+          <div className="font-medium">{order.customerRef || 'Unknown'}</div>
+          <div className="text-sm text-gray-500">{String(value)}</div>
         </div>
       ),
     },
@@ -127,22 +120,23 @@ const BeerOrderListPage: React.FC = () => {
       key: 'orderStatus',
       header: 'Status',
       sortable: true,
-      render: (value) => {
+      render: value => {
         const statusColors = {
-          'NEW': 'bg-blue-100 text-blue-800',
-          'VALIDATED': 'bg-yellow-100 text-yellow-800',
-          'ALLOCATION_PENDING': 'bg-orange-100 text-orange-800',
-          'ALLOCATED': 'bg-purple-100 text-purple-800',
-          'PICKED_UP': 'bg-indigo-100 text-indigo-800',
-          'DELIVERED': 'bg-green-100 text-green-800',
-          'DELIVERY_EXCEPTION': 'bg-red-100 text-red-800',
-          'CANCELLED': 'bg-gray-100 text-gray-800',
+          NEW: 'bg-blue-100 text-blue-800',
+          VALIDATED: 'bg-yellow-100 text-yellow-800',
+          ALLOCATION_PENDING: 'bg-orange-100 text-orange-800',
+          ALLOCATED: 'bg-purple-100 text-purple-800',
+          PICKED_UP: 'bg-indigo-100 text-indigo-800',
+          DELIVERED: 'bg-green-100 text-green-800',
+          DELIVERY_EXCEPTION: 'bg-red-100 text-red-800',
+          CANCELLED: 'bg-gray-100 text-gray-800',
         };
-        const colorClass = statusColors[value as keyof typeof statusColors] || 'bg-gray-100 text-gray-800';
+        const colorClass =
+          statusColors[value as keyof typeof statusColors] || 'bg-gray-100 text-gray-800';
 
         return (
           <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${colorClass}`}>
-            {value}
+            {String(value)}
           </span>
         );
       },
@@ -152,13 +146,13 @@ const BeerOrderListPage: React.FC = () => {
       header: 'Amount',
       sortable: true,
       align: 'right',
-      render: (value) => value ? `$${Number(value).toFixed(2)}` : '-',
+      render: value => (value ? `$${Number(value).toFixed(2)}` : '-'),
     },
     {
       key: 'createdDate',
       header: 'Created',
       sortable: true,
-      render: (value) => value ? new Date(value).toLocaleDateString() : '-',
+      render: value => (value ? new Date(String(value)).toLocaleDateString() : '-'),
     },
     {
       key: 'actions',
@@ -170,9 +164,9 @@ const BeerOrderListPage: React.FC = () => {
         <TableActions
           row={order}
           actions={createCommonActions({
-            onView: (order) => navigate(`/beer-orders/${order.id}`),
-            onEdit: (order) => navigate(`/beer-orders/${order.id}/edit`),
-            onDelete: (order) => handleDeleteBeerOrder(order),
+            onView: (order: BeerOrderDto) => navigate(`/beer-orders/${order.id}`),
+            onEdit: (order: BeerOrderDto) => navigate(`/beer-orders/${order.id}/edit`),
+            onDelete: (order: BeerOrderDto) => handleDeleteBeerOrder(order),
           })}
         />
       ),
@@ -201,8 +195,10 @@ const BeerOrderListPage: React.FC = () => {
   return (
     <PageContainer>
       <PageHeader
-        title={customerId ? `Beer Orders for Customer ${customerId}` : "Beer Orders"}
-        subtitle={customerId ? "Manage beer orders for this customer" : "Manage your beer order inventory"}
+        title={customerId ? `Beer Orders for Customer ${customerId}` : 'Beer Orders'}
+        subtitle={
+          customerId ? 'Manage beer orders for this customer' : 'Manage your beer order inventory'
+        }
         actions={
           <div className="flex gap-2">
             {customerId && (

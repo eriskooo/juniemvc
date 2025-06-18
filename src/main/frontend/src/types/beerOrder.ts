@@ -76,4 +76,4 @@ export type PageOfBeerOrderDto = Page<BeerOrderDto>;
  * Import the Page interface from beer.ts
  * This is a workaround until we move the Page interface to a common location
  */
-import { Page } from './beer';
+import type { Page } from './beer';

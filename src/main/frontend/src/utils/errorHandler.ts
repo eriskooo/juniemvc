@@ -21,7 +21,7 @@ export interface ApiError {
   type: ApiErrorType;
   status?: number;
   message: string;
-  details?: any;
+  details?: unknown;
   originalError?: Error;
 }
 
@@ -37,7 +37,7 @@ export function handleApiError(error: unknown): ApiError {
 
   if (axios.isAxiosError(error)) {
     const axiosError = error as AxiosError;
-    
+
     // Network errors
     if (axiosError.code === 'ECONNABORTED') {
       apiError.type = ApiErrorType.TIMEOUT_ERROR;
@@ -49,7 +49,7 @@ export function handleApiError(error: unknown): ApiError {
       // HTTP status code errors
       const status = axiosError.response.status;
       apiError.status = status;
-      
+
       switch (true) {
         case status === 400:
           apiError.type = ApiErrorType.BAD_REQUEST;
@@ -77,7 +77,7 @@ export function handleApiError(error: unknown): ApiError {
           apiError.message = `Error ${status}: ${axiosError.message}`;
       }
     }
-    
+
     apiError.originalError = axiosError;
   } else if (error instanceof Error) {
     apiError.message = error.message;
@@ -100,7 +100,7 @@ export function showErrorNotification(error: ApiError): void {
   // This is a placeholder for a toast notification
   // In a real application, you would use a toast library like react-toastify
   console.error(`[Error Notification] ${error.message}`);
-  
+
   // Example integration with a toast library:
   // toast.error(error.message, {
   //   position: "top-right",

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { Button } from '@components/ui';
 import { Menu, X, Home, Beer, Users, ShoppingCart } from 'lucide-react';
@@ -27,11 +27,13 @@ const RootLayout: React.FC = () => {
   return (
     <div className="flex min-h-screen bg-gray-50">
       {/* Sidebar */}
-      <aside className={`
+      <aside
+        className={`
         fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transform transition-transform duration-300 ease-in-out
         lg:translate-x-0 lg:static lg:inset-0
         ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
-      `}>
+      `}
+      >
         <div className="flex h-full flex-col">
           {/* Sidebar header */}
           <div className="flex h-16 items-center justify-between px-4 border-b">
@@ -49,7 +51,7 @@ const RootLayout: React.FC = () => {
           {/* Navigation */}
           <nav className="flex-1 px-4 py-6">
             <ul className="space-y-2">
-              {navigationItems.map((item) => {
+              {navigationItems.map(item => {
                 const Icon = item.icon;
                 const active = isActive(item.path);
 
@@ -60,9 +62,10 @@ const RootLayout: React.FC = () => {
                       onClick={() => setSidebarOpen(false)}
                       className={`
                         flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors
-                        ${active 
-                          ? 'bg-primary text-primary-foreground' 
-                          : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
+                        ${
+                          active
+                            ? 'bg-primary text-primary-foreground'
+                            : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
                         }
                       `}
                     >
@@ -79,7 +82,7 @@ const RootLayout: React.FC = () => {
 
       {/* Sidebar overlay for mobile */}
       {sidebarOpen && (
-        <div 
+        <div
           className="fixed inset-0 z-40 bg-black bg-opacity-50 lg:hidden"
           onClick={() => setSidebarOpen(false)}
         />

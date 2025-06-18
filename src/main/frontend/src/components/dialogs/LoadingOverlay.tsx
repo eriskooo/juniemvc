@@ -1,4 +1,4 @@
-import React, { ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import { Loader2 } from 'lucide-react';
 
 interface LoadingOverlayProps {
@@ -14,14 +14,14 @@ interface LoadingOverlayProps {
  * Loading overlay component that shows a loading spinner over content
  * Can be used as an overlay or inline loading indicator
  */
-const LoadingOverlay: React.FC<LoadingOverlayProps> = ({
+const LoadingOverlay = ({
   isLoading,
   children,
   message = 'Loading...',
   className = '',
   spinnerSize = 'md',
   overlay = true,
-}) => {
+}: LoadingOverlayProps) => {
   const getSpinnerSize = () => {
     switch (spinnerSize) {
       case 'sm':
@@ -44,9 +44,7 @@ const LoadingOverlay: React.FC<LoadingOverlayProps> = ({
         <div className="absolute inset-0 bg-white/80 backdrop-blur-sm flex items-center justify-center z-10">
           <div className="flex flex-col items-center gap-2">
             <Loader2 className={`${getSpinnerSize()} animate-spin text-primary`} />
-            {message && (
-              <p className="text-sm text-gray-600 font-medium">{message}</p>
-            )}
+            {message && <p className="text-sm text-gray-600 font-medium">{message}</p>}
           </div>
         </div>
       </div>
@@ -58,9 +56,7 @@ const LoadingOverlay: React.FC<LoadingOverlayProps> = ({
     <div className={`flex items-center justify-center p-8 ${className}`}>
       <div className="flex flex-col items-center gap-2">
         <Loader2 className={`${getSpinnerSize()} animate-spin text-primary`} />
-        {message && (
-          <p className="text-sm text-gray-600 font-medium">{message}</p>
-        )}
+        {message && <p className="text-sm text-gray-600 font-medium">{message}</p>}
       </div>
     </div>
   );

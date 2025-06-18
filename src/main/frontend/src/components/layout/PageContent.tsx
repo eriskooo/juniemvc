@@ -1,4 +1,4 @@
-import React, { ReactNode } from 'react';
+import type { ReactNode } from 'react';
 
 interface PageContentProps {
   children: ReactNode;
@@ -10,11 +10,7 @@ interface PageContentProps {
  * Page content component that provides consistent content area styling
  * Includes configurable padding and background
  */
-const PageContent: React.FC<PageContentProps> = ({
-  children,
-  className = '',
-  padding = 'md',
-}) => {
+const PageContent = ({ children, className = '', padding = 'md' }: PageContentProps) => {
   const paddingClasses = {
     none: '',
     sm: 'p-4',

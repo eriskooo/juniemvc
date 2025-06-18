@@ -1,11 +1,10 @@
-import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@components/ui';
 
 /**
  * Home page component
  * Displays a welcome message and overview of the application
  */
-const HomePage: React.FC = () => {
+const HomePage = () => {
   return (
     <div className="space-y-6">
       <h1 className="text-3xl font-bold">Welcome to Beer Service</h1>

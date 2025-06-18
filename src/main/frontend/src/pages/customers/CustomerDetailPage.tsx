@@ -1,14 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Edit, Trash2, ArrowLeft, User, Mail, Phone, MapPin, Calendar, ShoppingCart } from 'lucide-react';
-import { PageContainer, PageHeader, PageContent } from '@components/layout';
-import { TabNavigation } from '@components/navigation';
-import { LoadingSpinner } from '@components/dialogs';
-import { Button, Card, CardContent, CardHeader, CardTitle, CardDescription } from '@components/ui';
-import { useToast, useConfirmationDialog, useTabs } from '@hooks';
-import { customerService } from '../../services/customerService';
-import type { CustomerDto } from '../../api/models';
-import type { Tab } from '@components/navigation';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@components/ui';
+import { useToast, useConfirmationDialog } from '../../hooks';
+import customerService from '../../services/customerService';
+import type { CustomerDto, BeerOrderDto } from '../../api';
 
 /**
  * Customer Detail page component
@@ -18,17 +13,13 @@ const CustomerDetailPage: React.FC = () => {
   const { customerId } = useParams<{ customerId: string }>();
   const navigate = useNavigate();
   const { success, error } = useToast();
-  const { dialogState, confirmDelete } = useConfirmationDialog();
+  const { confirmDelete } = useConfirmationDialog();
 
   const [customer, setCustomer] = useState<CustomerDto | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Tab management
-  const tabIds = ['details', 'address', 'orders'];
-  const { activeTab, changeTab } = useTabs(tabIds);
-
   // Load customer data
-  const loadCustomer = async () => {
+  const loadCustomer = useCallback(async () => {
     if (!customerId) return;
 
     setLoading(true);
@@ -41,26 +32,31 @@ const CustomerDetailPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [customerId, error]);
 
   useEffect(() => {
     loadCustomer();
-  }, [customerId]);
+  }, [loadCustomer]);
 
   // Handle customer deletion
   const handleDeleteCustomer = async () => {
     if (!customer) return;
 
-    confirmDelete(customer.customerName || 'this customer', async () => {
+    confirmDelete(customer.name || 'this customer', async () => {
       try {
         await customerService.deleteCustomer(customer.id!);
-        success(`Customer "${customer.customerName}" deleted successfully`);
+        success(`Customer "${customer.name}" deleted successfully`);
         navigate('/customers');
       } catch (err) {
         error('Failed to delete customer');
         console.error('Error deleting customer:', err);
       }
     });
+  };
+
+  // Handle view all orders
+  const handleViewOrders = () => {
+    navigate(`/beer-orders?customerId=${customer?.id}`);
   };
 
   if (loading) {
@@ -101,34 +97,32 @@ const CustomerDetailPage: React.FC = () => {
         <Card>
           <CardHeader>
             <CardTitle>Customer Information</CardTitle>
-            <CardDescription>
-              Customer ID: {customer.id}
-            </CardDescription>
+            <CardDescription>Customer ID: {customer?.id}</CardDescription>
           </CardHeader>
           <CardContent>
             <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div>
                 <dt className="text-sm font-medium text-gray-500">Name</dt>
-                <dd className="mt-1 text-sm text-gray-900">{customer.name}</dd>
+                <dd className="mt-1 text-sm text-gray-900">{customer?.name}</dd>
               </div>
               <div>
                 <dt className="text-sm font-medium text-gray-500">Email</dt>
-                <dd className="mt-1 text-sm text-gray-900">{customer.email}</dd>
+                <dd className="mt-1 text-sm text-gray-900">{customer?.email}</dd>
               </div>
               <div>
                 <dt className="text-sm font-medium text-gray-500">Phone Number</dt>
-                <dd className="mt-1 text-sm text-gray-900">{customer.phoneNumber}</dd>
+                <dd className="mt-1 text-sm text-gray-900">{customer?.phoneNumber}</dd>
               </div>
               <div>
                 <dt className="text-sm font-medium text-gray-500">Created Date</dt>
                 <dd className="mt-1 text-sm text-gray-900">
-                  {new Date(customer.createdDate).toLocaleString()}
+                  {customer?.createdDate ? new Date(customer.createdDate).toLocaleString() : '-'}
                 </dd>
               </div>
               <div>
                 <dt className="text-sm font-medium text-gray-500">Last Updated</dt>
                 <dd className="mt-1 text-sm text-gray-900">
-                  {new Date(customer.updateDate).toLocaleString()}
+                  {customer?.updateDate ? new Date(customer.updateDate).toLocaleString() : '-'}
                 </dd>
               </div>
             </dl>
@@ -144,21 +138,26 @@ const CustomerDetailPage: React.FC = () => {
               <div>
                 <dt className="text-sm font-medium text-gray-500">Street Address</dt>
                 <dd className="mt-1 text-sm text-gray-900">
-                  {customer.addressLine1}
-                  {customer.addressLine2 && <span><br />{customer.addressLine2}</span>}
+                  {customer?.addressLine1}
+                  {customer?.addressLine2 && (
+                    <span>
+                      <br />
+                      {customer.addressLine2}
+                    </span>
+                  )}
                 </dd>
               </div>
               <div>
                 <dt className="text-sm font-medium text-gray-500">City</dt>
-                <dd className="mt-1 text-sm text-gray-900">{customer.city}</dd>
+                <dd className="mt-1 text-sm text-gray-900">{customer?.city}</dd>
               </div>
               <div>
                 <dt className="text-sm font-medium text-gray-500">State</dt>
-                <dd className="mt-1 text-sm text-gray-900">{customer.state}</dd>
+                <dd className="mt-1 text-sm text-gray-900">{customer?.state}</dd>
               </div>
               <div>
                 <dt className="text-sm font-medium text-gray-500">Postal Code</dt>
-                <dd className="mt-1 text-sm text-gray-900">{customer.postalCode}</dd>
+                <dd className="mt-1 text-sm text-gray-900">{customer?.postalCode}</dd>
               </div>
             </dl>
           </CardContent>
@@ -168,12 +167,10 @@ const CustomerDetailPage: React.FC = () => {
       <Card>
         <CardHeader>
           <CardTitle>Beer Orders</CardTitle>
-          <CardDescription>
-            Recent orders placed by this customer
-          </CardDescription>
+          <CardDescription>Recent orders placed by this customer</CardDescription>
         </CardHeader>
         <CardContent>
-          {customer.beerOrders && customer.beerOrders.length > 0 ? (
+          {customer?.beerOrders && customer.beerOrders.length > 0 ? (
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
@@ -186,16 +183,20 @@ const CustomerDetailPage: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {customer.beerOrders.map((order: any) => (
+                  {customer?.beerOrders?.map((order: BeerOrderDto) => (
                     <tr key={order.id} className="border-b">
                       <td className="p-2">{order.id}</td>
-                      <td className="p-2">{new Date(order.createdDate).toLocaleDateString()}</td>
                       <td className="p-2">
-                        <span className={`rounded-full px-2 py-1 text-xs font-medium ${
-                          order.status === 'COMPLETED' 
-                            ? 'bg-green-100 text-green-800' 
-                            : 'bg-yellow-100 text-yellow-800'
-                        }`}>
+                        {order.createdDate ? new Date(order.createdDate).toLocaleDateString() : '-'}
+                      </td>
+                      <td className="p-2">
+                        <span
+                          className={`rounded-full px-2 py-1 text-xs font-medium ${
+                            order.status === 'COMPLETED'
+                              ? 'bg-green-100 text-green-800'
+                              : 'bg-yellow-100 text-yellow-800'
+                          }`}
+                        >
                           {order.status}
                         </span>
                       </td>

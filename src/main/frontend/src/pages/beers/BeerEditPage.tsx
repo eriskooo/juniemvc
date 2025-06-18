@@ -2,15 +2,22 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { PageContainer, PageHeader, PageContent } from '@components/layout';
-import { FormWrapper, FormField, FormActions, CurrencyInput, NumberInput, SelectInput } from '@components/forms';
+import {
+  FormWrapper,
+  FormField,
+  FormActions,
+  CurrencyInput,
+  NumberInput,
+  SelectInput,
+} from '@components/forms';
 import { Input, Button } from '@components/ui';
 import { LoadingSpinner } from '@components/dialogs';
-import { useForm, useToast } from '@hooks';
+import { useForm, useToast } from '../../hooks';
 import { beerValidationRules } from '../../utils/validation';
-import { beerService } from '../../services/beerService';
-import type { BeerDto } from '../../api/models';
+import beerService from '../../services/beerService';
+import type { BeerDto } from '../../api';
 
-interface BeerFormData {
+interface BeerFormData extends Record<string, unknown> {
   beerName: string;
   beerStyle: string;
   upc: string;
@@ -37,15 +44,7 @@ const BeerEditPage: React.FC = () => {
     quantityOnHand: undefined,
   };
 
-  const {
-    values,
-    errors,
-    isValid,
-    isSubmitting,
-    setValue,
-    setValues,
-    handleSubmit,
-  } = useForm({
+  const { values, errors, isValid, isSubmitting, setValue, setValues, handleSubmit } = useForm({
     initialValues,
     validationRules: {
       beerName: beerValidationRules.beerName,
@@ -53,16 +52,17 @@ const BeerEditPage: React.FC = () => {
       price: beerValidationRules.price,
       quantityOnHand: beerValidationRules.quantityOnHand,
     },
-    onSubmit: async (formData) => {
+    onSubmit: async (formData: BeerFormData) => {
       if (!beer) return;
 
       try {
         const beerData: Omit<BeerDto, 'id' | 'version' | 'createdDate' | 'updateDate'> = {
           beerName: formData.beerName,
           beerStyle: formData.beerStyle,
-          upc: formData.upc || undefined,
-          price: formData.price,
-          quantityOnHand: formData.quantityOnHand,
+          upc: formData.upc || '',
+          price: formData.price || 0,
+          quantityOnHand: formData.quantityOnHand || 0,
+          description: beer?.description,
         };
 
         const updatedBeer = await beerService.updateBeer(beer.id!, beerData);
@@ -171,17 +171,12 @@ const BeerEditPage: React.FC = () => {
         <FormWrapper onSubmit={handleSubmit} isLoading={isSubmitting}>
           <div className="grid gap-6 md:grid-cols-2">
             {/* Beer Name */}
-            <FormField
-              label="Beer Name"
-              required
-              error={errors.beerName?.[0]}
-              htmlFor="beerName"
-            >
+            <FormField label="Beer Name" required error={errors.beerName?.[0]} htmlFor="beerName">
               <Input
                 id="beerName"
                 placeholder="Enter beer name"
                 value={values.beerName}
-                onChange={(e) => setValue('beerName', e.target.value)}
+                onChange={e => setValue('beerName', e.target.value)}
               />
             </FormField>
 
@@ -194,37 +189,28 @@ const BeerEditPage: React.FC = () => {
             >
               <SelectInput
                 value={values.beerStyle}
-                onChange={(value) => setValue('beerStyle', value)}
+                onChange={value => setValue('beerStyle', value)}
                 options={beerStyleOptions}
                 placeholder="Select a beer style"
               />
             </FormField>
 
             {/* UPC */}
-            <FormField
-              label="UPC"
-              helpText="Universal Product Code (optional)"
-              htmlFor="upc"
-            >
+            <FormField label="UPC" helpText="Universal Product Code (optional)" htmlFor="upc">
               <Input
                 id="upc"
                 placeholder="Enter UPC"
                 value={values.upc}
-                onChange={(e) => setValue('upc', e.target.value)}
+                onChange={e => setValue('upc', e.target.value)}
               />
             </FormField>
 
             {/* Price */}
-            <FormField
-              label="Price"
-              required
-              error={errors.price?.[0]}
-              htmlFor="price"
-            >
+            <FormField label="Price" required error={errors.price?.[0]} htmlFor="price">
               <CurrencyInput
                 id="price"
                 value={values.price}
-                onChange={(value) => setValue('price', value)}
+                onChange={value => setValue('price', value)}
                 placeholder="0.00"
                 min={0}
               />
@@ -240,7 +226,7 @@ const BeerEditPage: React.FC = () => {
               <NumberInput
                 id="quantityOnHand"
                 value={values.quantityOnHand}
-                onChange={(value) => setValue('quantityOnHand', value)}
+                onChange={value => setValue('quantityOnHand', value)}
                 placeholder="0"
                 min={0}
                 allowDecimals={false}

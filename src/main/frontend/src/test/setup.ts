@@ -1,11 +1,39 @@
 import '@testing-library/jest-dom';
+import { TextEncoder, TextDecoder } from 'util';
+
+// Mock env module to handle import.meta.env
+jest.mock('../utils/env', () => ({
+  getAppEnv: () => 'test',
+  isDevelopment: () => false,
+  isProduction: () => false,
+  isTest: () => true,
+  getAppName: () => 'Beer Service',
+  getAppVersion: () => '0.1.0',
+  getApiBaseUrl: () => '/api',
+  getApiTimeout: () => 10000,
+  isMockApiEnabled: () => false,
+  isDebugEnabled: () => false,
+}));
+
+// Polyfill for TextEncoder/TextDecoder
+if (typeof global.TextEncoder === 'undefined') {
+  global.TextEncoder = TextEncoder;
+  global.TextDecoder = TextDecoder as typeof global.TextDecoder;
+}
 
 // Mock IntersectionObserver
 global.IntersectionObserver = class IntersectionObserver {
+  root: Element | null = null;
+  rootMargin: string = '0px';
+  thresholds: ReadonlyArray<number> = [];
+
   constructor() {}
   disconnect() {}
   observe() {}
   unobserve() {}
+  takeRecords(): IntersectionObserverEntry[] {
+    return [];
+  }
 };
 
 // Mock ResizeObserver
@@ -57,7 +85,7 @@ beforeAll(() => {
     if (
       typeof args[0] === 'string' &&
       (args[0].includes('Warning: ReactDOM.render is deprecated') ||
-       args[0].includes('Warning: componentWillReceiveProps has been renamed'))
+        args[0].includes('Warning: componentWillReceiveProps has been renamed'))
     ) {
       return;
     }

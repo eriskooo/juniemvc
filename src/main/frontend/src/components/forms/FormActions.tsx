@@ -1,4 +1,4 @@
-import React, { ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import { Button } from '../ui/button';
 
 interface FormActionsProps {
@@ -16,7 +16,7 @@ interface FormActionsProps {
  * Form actions component that provides consistent button layout
  * Includes submit and cancel buttons with loading states
  */
-const FormActions: React.FC<FormActionsProps> = ({
+const FormActions = ({
   children,
   submitLabel = 'Save',
   cancelLabel = 'Cancel',
@@ -25,7 +25,7 @@ const FormActions: React.FC<FormActionsProps> = ({
   submitDisabled = false,
   className = '',
   alignment = 'right',
-}) => {
+}: FormActionsProps) => {
   const alignmentClasses = {
     left: 'justify-start',
     center: 'justify-center',
@@ -39,19 +39,11 @@ const FormActions: React.FC<FormActionsProps> = ({
       ) : (
         <>
           {onCancel && (
-            <Button
-              type="button"
-              variant="outline"
-              onClick={onCancel}
-              disabled={isLoading}
-            >
+            <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
               {cancelLabel}
             </Button>
           )}
-          <Button
-            type="submit"
-            disabled={isLoading || submitDisabled}
-          >
+          <Button type="submit" disabled={isLoading || submitDisabled}>
             {isLoading ? 'Saving...' : submitLabel}
           </Button>
         </>

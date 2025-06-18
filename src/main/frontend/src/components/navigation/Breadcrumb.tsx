@@ -1,4 +1,3 @@
-import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { ChevronRight, Home } from 'lucide-react';
 
@@ -92,11 +91,9 @@ const Breadcrumb: React.FC = () => {
   return (
     <nav className="flex items-center space-x-1 text-sm text-gray-600 mb-6">
       {breadcrumbs.map((breadcrumb, index) => (
-        <React.Fragment key={breadcrumb.path}>
-          {index > 0 && (
-            <ChevronRight className="h-4 w-4 text-gray-400" />
-          )}
-          
+        <div key={breadcrumb.path} className="flex items-center">
+          {index > 0 && <ChevronRight className="h-4 w-4 text-gray-400" />}
+
           {breadcrumb.isActive ? (
             <span className="font-medium text-gray-900">
               {index === 0 && <Home className="h-4 w-4 inline mr-1" />}
@@ -111,7 +108,7 @@ const Breadcrumb: React.FC = () => {
               {breadcrumb.label}
             </Link>
           )}
-        </React.Fragment>
+        </div>
       ))}
     </nav>
   );

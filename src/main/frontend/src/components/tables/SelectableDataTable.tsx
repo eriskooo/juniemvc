@@ -1,9 +1,9 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/table';
 import { Button } from '../ui/button';
 import { Checkbox } from '../ui/checkbox';
 import { ChevronUp, ChevronDown, ChevronsUpDown } from 'lucide-react';
-import { Column, SortConfig, PaginationConfig } from './DataTable';
+import type { Column, SortConfig, PaginationConfig } from './DataTable';
 
 export interface SelectionConfig<T> {
   selectedRows: T[];
@@ -31,7 +31,7 @@ interface SelectableDataTableProps<T> {
 /**
  * Data table component with row selection functionality
  */
-const SelectableDataTable = <T extends Record<string, any>>({
+const SelectableDataTable = <T extends Record<string, unknown>>({
   data,
   columns,
   selection,
@@ -84,15 +84,17 @@ const SelectableDataTable = <T extends Record<string, any>>({
 
   // Check if all selectable rows are selected
   const isAllSelected = useMemo(() => {
-    return selectableRows.length > 0 && 
-           selectableRows.every(row => 
-             selectedRows.some(selected => getRowId(selected) === getRowId(row))
-           );
+    return (
+      selectableRows.length > 0 &&
+      selectableRows.every(row =>
+        selectedRows.some(selected => getRowId(selected) === getRowId(row))
+      )
+    );
   }, [selectableRows, selectedRows, getRowId]);
 
   // Check if some (but not all) rows are selected
   const isIndeterminate = useMemo(() => {
-    const selectedCount = selectableRows.filter(row => 
+    const selectedCount = selectableRows.filter(row =>
       selectedRows.some(selected => getRowId(selected) === getRowId(row))
     ).length;
     return selectedCount > 0 && selectedCount < selectableRows.length;
@@ -101,12 +103,12 @@ const SelectableDataTable = <T extends Record<string, any>>({
   const handleSort = (columnKey: string) => {
     if (!sortable) return;
 
-    const newDirection = 
-      currentSortConfig?.key === columnKey && currentSortConfig.direction === 'asc' 
-        ? 'desc' 
+    const newDirection: 'asc' | 'desc' =
+      currentSortConfig?.key === columnKey && currentSortConfig.direction === 'asc'
+        ? 'desc'
         : 'asc';
 
-    const newSortConfig = { key: columnKey, direction: newDirection };
+    const newSortConfig: SortConfig = { key: columnKey, direction: newDirection };
 
     if (onSort) {
       onSort(newSortConfig);
@@ -129,16 +131,14 @@ const SelectableDataTable = <T extends Record<string, any>>({
     } else {
       // Deselect all rows from current page/data
       const currentRowIds = selectableRows.map(getRowId);
-      const newSelection = selectedRows.filter(row => 
-        !currentRowIds.includes(getRowId(row))
-      );
+      const newSelection = selectedRows.filter(row => !currentRowIds.includes(getRowId(row)));
       onSelectionChange(newSelection);
     }
   };
 
   const handleRowSelect = (row: T, checked: boolean) => {
     const rowId = getRowId(row);
-    
+
     if (checked) {
       onSelectionChange([...selectedRows, row]);
     } else {
@@ -159,28 +159,33 @@ const SelectableDataTable = <T extends Record<string, any>>({
     if (!sortable) return null;
 
     if (currentSortConfig?.key === columnKey) {
-      return currentSortConfig.direction === 'asc' ? 
-        <ChevronUp className="h-4 w-4" /> : 
-        <ChevronDown className="h-4 w-4" />;
+      return currentSortConfig.direction === 'asc' ? (
+        <ChevronUp className="h-4 w-4" />
+      ) : (
+        <ChevronDown className="h-4 w-4" />
+      );
     }
     return <ChevronsUpDown className="h-4 w-4 opacity-50" />;
   };
 
   const renderCell = (column: Column<T>, row: T, index: number) => {
     const value = typeof column.key === 'string' ? row[column.key] : row[column.key as keyof T];
-    
+
     if (column.render) {
       return column.render(value, row, index);
     }
-    
+
     return value?.toString() || '';
   };
 
   const getAlignmentClass = (align?: string) => {
     switch (align) {
-      case 'center': return 'text-center';
-      case 'right': return 'text-right';
-      default: return 'text-left';
+      case 'center':
+        return 'text-center';
+      case 'right':
+        return 'text-right';
+      default:
+        return 'text-left';
     }
   };
 
@@ -197,12 +202,8 @@ const SelectableDataTable = <T extends Record<string, any>>({
       {/* Bulk actions bar */}
       {selectedRows.length > 0 && bulkActions && (
         <div className="flex items-center justify-between p-4 bg-blue-50 border border-blue-200 rounded-md">
-          <span className="text-sm text-blue-700">
-            {selectedRows.length} row(s) selected
-          </span>
-          <div className="flex items-center gap-2">
-            {bulkActions}
-          </div>
+          <span className="text-sm text-blue-700">{selectedRows.length} row(s) selected</span>
+          <div className="flex items-center gap-2">{bulkActions}</div>
         </div>
       )}
 
@@ -213,14 +214,13 @@ const SelectableDataTable = <T extends Record<string, any>>({
               {/* Selection column */}
               <TableHead className="w-12">
                 <Checkbox
-                  checked={isAllSelected}
-                  indeterminate={isIndeterminate}
+                  checked={isAllSelected ? true : isIndeterminate ? 'indeterminate' : false}
                   onCheckedChange={handleSelectAll}
                   aria-label="Select all rows"
                 />
               </TableHead>
-              
-              {columns.map((column) => (
+
+              {columns.map(column => (
                 <TableHead
                   key={column.key.toString()}
                   className={`${getAlignmentClass(column.align)} ${
@@ -246,21 +246,18 @@ const SelectableDataTable = <T extends Record<string, any>>({
               </TableRow>
             ) : (
               sortedData.map((row, index) => (
-                <TableRow 
-                  key={getRowId(row)}
-                  className={isRowSelected(row) ? 'bg-blue-50' : ''}
-                >
+                <TableRow key={getRowId(row)} className={isRowSelected(row) ? 'bg-blue-50' : ''}>
                   {/* Selection cell */}
                   <TableCell>
                     <Checkbox
                       checked={isRowSelected(row)}
                       disabled={!isRowSelectable(row)}
-                      onCheckedChange={(checked) => handleRowSelect(row, checked as boolean)}
+                      onCheckedChange={(checked: boolean) => handleRowSelect(row, checked)}
                       aria-label={`Select row ${index + 1}`}
                     />
                   </TableCell>
-                  
-                  {columns.map((column) => (
+
+                  {columns.map(column => (
                     <TableCell
                       key={column.key.toString()}
                       className={getAlignmentClass(column.align)}
@@ -312,17 +309,17 @@ const TablePagination: React.FC<TablePaginationProps> = ({
           Showing {startItem} to {endItem} of {total} results
         </span>
       </div>
-      
+
       <div className="flex items-center space-x-2">
         {onPageSizeChange && (
           <div className="flex items-center space-x-2">
             <span className="text-sm text-gray-700">Rows per page:</span>
             <select
               value={pageSize}
-              onChange={(e) => onPageSizeChange(Number(e.target.value))}
+              onChange={e => onPageSizeChange(Number(e.target.value))}
               className="border rounded px-2 py-1 text-sm"
             >
-              {pageSizeOptions.map((size) => (
+              {pageSizeOptions.map(size => (
                 <option key={size} value={size}>
                   {size}
                 </option>
@@ -330,7 +327,7 @@ const TablePagination: React.FC<TablePaginationProps> = ({
             </select>
           </div>
         )}
-        
+
         <div className="flex items-center space-x-1">
           <Button
             variant="outline"

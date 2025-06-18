@@ -1,18 +1,17 @@
-import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { PageContainer, PageHeader, PageContent } from '@components/layout';
 import { FormWrapper, FormField, FormActions } from '@components/forms';
 import { Input, Button } from '@components/ui';
-import { useForm, useToast } from '@hooks';
+import { useForm, useToast } from '../../hooks';
 import { customerValidationRules } from '../../utils/validation';
-import { customerService } from '../../services/customerService';
-import type { CustomerDto } from '../../api/models';
+import customerService from '../../services/customerService';
+import type { CustomerDto } from '../../api';
 
-interface CustomerFormData {
-  customerName: string;
+interface CustomerFormData extends Record<string, unknown> {
+  name: string;
   email: string;
-  phone: string;
+  phoneNumber: string;
   addressLine1: string;
   addressLine2: string;
   city: string;
@@ -29,9 +28,9 @@ const CustomerCreatePage: React.FC = () => {
   const { success, error } = useToast();
 
   const initialValues: CustomerFormData = {
-    customerName: '',
+    name: '',
     email: '',
-    phone: '',
+    phoneNumber: '',
     addressLine1: '',
     addressLine2: '',
     city: '',
@@ -39,34 +38,30 @@ const CustomerCreatePage: React.FC = () => {
     postalCode: '',
   };
 
-  const {
-    values,
-    errors,
-    isValid,
-    isSubmitting,
-    setValue,
-    handleSubmit,
-  } = useForm({
+  const { values, errors, isValid, isSubmitting, setValue, handleSubmit } = useForm({
     initialValues,
     validationRules: {
-      customerName: customerValidationRules.customerName,
+      name: customerValidationRules.customerName,
       email: customerValidationRules.email,
     },
-    onSubmit: async (formData) => {
+    onSubmit: async (formData: CustomerFormData) => {
       try {
-        const customerData: Omit<CustomerDto, 'id' | 'version' | 'createdDate' | 'updateDate'> = {
-          customerName: formData.customerName,
+        const customerData: Omit<
+          CustomerDto,
+          'id' | 'version' | 'createdDate' | 'updateDate' | 'beerOrders'
+        > = {
+          name: formData.name,
           email: formData.email || undefined,
-          phone: formData.phone || undefined,
-          addressLine1: formData.addressLine1 || undefined,
+          phoneNumber: formData.phoneNumber || undefined,
+          addressLine1: formData.addressLine1 || '',
           addressLine2: formData.addressLine2 || undefined,
-          city: formData.city || undefined,
-          state: formData.state || undefined,
-          postalCode: formData.postalCode || undefined,
+          city: formData.city || '',
+          state: formData.state || '',
+          postalCode: formData.postalCode || '',
         };
 
         const createdCustomer = await customerService.createCustomer(customerData);
-        success(`Customer "${createdCustomer.customerName}" created successfully`);
+        success(`Customer "${createdCustomer.name}" created successfully`);
         navigate(`/customers/${createdCustomer.id}`);
       } catch (err) {
         error('Failed to create customer. Please try again.');
@@ -99,17 +94,12 @@ const CustomerCreatePage: React.FC = () => {
             <div>
               <h3 className="text-lg font-semibold mb-4">Basic Information</h3>
               <div className="grid gap-6 md:grid-cols-2">
-                <FormField
-                  label="Customer Name"
-                  required
-                  error={errors.customerName?.[0]}
-                  htmlFor="customerName"
-                >
+                <FormField label="Customer Name" required error={errors.name?.[0]} htmlFor="name">
                   <Input
-                    id="customerName"
+                    id="name"
                     placeholder="Enter customer name"
-                    value={values.customerName}
-                    onChange={(e) => setValue('customerName', e.target.value)}
+                    value={values.name}
+                    onChange={e => setValue('name', e.target.value)}
                   />
                 </FormField>
 
@@ -124,20 +114,16 @@ const CustomerCreatePage: React.FC = () => {
                     type="email"
                     placeholder="Enter email address"
                     value={values.email}
-                    onChange={(e) => setValue('email', e.target.value)}
+                    onChange={e => setValue('email', e.target.value)}
                   />
                 </FormField>
 
-                <FormField
-                  label="Phone"
-                  htmlFor="phone"
-                  helpText="Optional phone number"
-                >
+                <FormField label="Phone" htmlFor="phoneNumber" helpText="Optional phone number">
                   <Input
-                    id="phone"
+                    id="phoneNumber"
                     placeholder="Enter phone number"
-                    value={values.phone}
-                    onChange={(e) => setValue('phone', e.target.value)}
+                    value={values.phoneNumber}
+                    onChange={e => setValue('phoneNumber', e.target.value)}
                   />
                 </FormField>
               </div>
@@ -147,16 +133,12 @@ const CustomerCreatePage: React.FC = () => {
             <div>
               <h3 className="text-lg font-semibold mb-4">Address Information</h3>
               <div className="grid gap-6 md:grid-cols-2">
-                <FormField
-                  label="Address Line 1"
-                  htmlFor="addressLine1"
-                  helpText="Street address"
-                >
+                <FormField label="Address Line 1" htmlFor="addressLine1" helpText="Street address">
                   <Input
                     id="addressLine1"
                     placeholder="Enter street address"
                     value={values.addressLine1}
-                    onChange={(e) => setValue('addressLine1', e.target.value)}
+                    onChange={e => setValue('addressLine1', e.target.value)}
                   />
                 </FormField>
 
@@ -169,43 +151,34 @@ const CustomerCreatePage: React.FC = () => {
                     id="addressLine2"
                     placeholder="Apartment, suite, etc."
                     value={values.addressLine2}
-                    onChange={(e) => setValue('addressLine2', e.target.value)}
+                    onChange={e => setValue('addressLine2', e.target.value)}
                   />
                 </FormField>
 
-                <FormField
-                  label="City"
-                  htmlFor="city"
-                >
+                <FormField label="City" htmlFor="city">
                   <Input
                     id="city"
                     placeholder="Enter city"
                     value={values.city}
-                    onChange={(e) => setValue('city', e.target.value)}
+                    onChange={e => setValue('city', e.target.value)}
                   />
                 </FormField>
 
-                <FormField
-                  label="State"
-                  htmlFor="state"
-                >
+                <FormField label="State" htmlFor="state">
                   <Input
                     id="state"
                     placeholder="Enter state"
                     value={values.state}
-                    onChange={(e) => setValue('state', e.target.value)}
+                    onChange={e => setValue('state', e.target.value)}
                   />
                 </FormField>
 
-                <FormField
-                  label="Postal Code"
-                  htmlFor="postalCode"
-                >
+                <FormField label="Postal Code" htmlFor="postalCode">
                   <Input
                     id="postalCode"
                     placeholder="Enter postal code"
                     value={values.postalCode}
-                    onChange={(e) => setValue('postalCode', e.target.value)}
+                    onChange={e => setValue('postalCode', e.target.value)}
                   />
                 </FormField>
               </div>

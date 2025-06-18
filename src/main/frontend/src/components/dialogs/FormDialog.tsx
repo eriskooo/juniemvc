@@ -1,11 +1,5 @@
-import React, { ReactNode } from 'react';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '../ui/dialog';
+import type { ReactNode, FormEvent } from 'react';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '../ui/dialog';
 import { FormWrapper, FormActions } from '../forms';
 
 export interface FormDialogProps {
@@ -14,7 +8,7 @@ export interface FormDialogProps {
   title: string;
   description?: string;
   children: ReactNode;
-  onSubmit: (e: React.FormEvent) => void;
+  onSubmit: (e: FormEvent) => void;
   onCancel?: () => void;
   submitLabel?: string;
   cancelLabel?: string;
@@ -28,7 +22,7 @@ export interface FormDialogProps {
  * Modal form dialog component
  * Provides a consistent modal wrapper for forms
  */
-const FormDialog: React.FC<FormDialogProps> = ({
+const FormDialog = ({
   open,
   onOpenChange,
   title,
@@ -42,7 +36,7 @@ const FormDialog: React.FC<FormDialogProps> = ({
   submitDisabled = false,
   className = '',
   size = 'md',
-}) => {
+}: FormDialogProps) => {
   const handleCancel = () => {
     if (onCancel) {
       onCancel();
@@ -69,16 +63,12 @@ const FormDialog: React.FC<FormDialogProps> = ({
       <DialogContent className={`${getSizeClass()} max-h-[90vh] overflow-y-auto ${className}`}>
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
-          {description && (
-            <DialogDescription>{description}</DialogDescription>
-          )}
+          {description && <DialogDescription>{description}</DialogDescription>}
         </DialogHeader>
-        
+
         <FormWrapper onSubmit={onSubmit} isLoading={isLoading}>
-          <div className="space-y-4">
-            {children}
-          </div>
-          
+          <div className="space-y-4">{children}</div>
+
           <FormActions
             submitLabel={submitLabel}
             cancelLabel={cancelLabel}

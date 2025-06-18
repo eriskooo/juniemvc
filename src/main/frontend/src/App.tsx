@@ -1,6 +1,6 @@
 import React, { Suspense } from 'react';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
-import { RootLayout } from '@layouts';
+import { RootLayout } from './layouts';
 import { AuthProvider } from './contexts/AuthContext';
 import './App.css';
 
@@ -25,7 +25,9 @@ const BeerOrderListPage = React.lazy(() => import('./pages/beerOrders/BeerOrderL
 const BeerOrderDetailPage = React.lazy(() => import('./pages/beerOrders/BeerOrderDetailPage'));
 const BeerOrderCreatePage = React.lazy(() => import('./pages/beerOrders/BeerOrderCreatePage'));
 const BeerOrderEditPage = React.lazy(() => import('./pages/beerOrders/BeerOrderEditPage'));
-const BeerOrderShipmentCreatePage = React.lazy(() => import('./pages/beerOrders/BeerOrderShipmentCreatePage'));
+const BeerOrderShipmentCreatePage = React.lazy(
+  () => import('./pages/beerOrders/BeerOrderShipmentCreatePage')
+);
 
 // Loading component for Suspense fallback
 const LoadingSpinner: React.FC = () => (

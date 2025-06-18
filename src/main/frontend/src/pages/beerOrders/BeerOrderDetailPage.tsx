@@ -1,6 +1,47 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardHeader, CardTitle, Tabs, TabsContent, TabsList, TabsTrigger } from '@components/ui';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from '@components/ui';
+
+// Local interfaces for order data
+interface OrderLineItem {
+  id: number;
+  beerId: number;
+  beerName: string;
+  beerStyle: string;
+  upc: string;
+  orderQuantity: number;
+  price: number;
+}
+
+interface OrderShipment {
+  id: number;
+  shipmentDate: string;
+  carrier: string;
+  trackingNumber: string;
+}
+
+interface OrderDetail {
+  id: number;
+  customerRef: string;
+  customerName: string;
+  customerEmail: string;
+  customerPhone: string;
+  createdDate: string;
+  updateDate: string;
+  status: string;
+  paymentAmount: number;
+  lineItems: OrderLineItem[];
+  shipments: OrderShipment[];
+}
 
 /**
  * Beer Order Detail page component
@@ -10,7 +51,7 @@ const BeerOrderDetailPage: React.FC = () => {
   const { orderId } = useParams<{ orderId: string }>();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
-  const [order, setOrder] = useState<any | null>(null);
+  const [order, setOrder] = useState<OrderDetail | null>(null);
   const [activeTab, setActiveTab] = useState('details');
 
   // Simulate fetching beer order data
@@ -35,7 +76,7 @@ const BeerOrderDetailPage: React.FC = () => {
           beerStyle: 'IPA',
           upc: '0631234200036',
           orderQuantity: 2,
-          price: 12.99
+          price: 12.99,
         },
         {
           id: 2,
@@ -44,7 +85,7 @@ const BeerOrderDetailPage: React.FC = () => {
           beerStyle: 'PALE_ALE',
           upc: '0631234300019',
           orderQuantity: 3,
-          price: 11.99
+          price: 11.99,
         },
         {
           id: 3,
@@ -53,17 +94,17 @@ const BeerOrderDetailPage: React.FC = () => {
           beerStyle: 'PORTER',
           upc: '0083783375213',
           orderQuantity: 4,
-          price: 13.99
-        }
+          price: 13.99,
+        },
       ],
       shipments: [
         {
           id: 1,
           shipmentDate: '2023-01-03T10:00:00Z',
           carrier: 'FedEx',
-          trackingNumber: '123456789'
-        }
-      ]
+          trackingNumber: '123456789',
+        },
+      ],
     };
 
     // Simulate API call delay
@@ -121,7 +162,9 @@ const BeerOrderDetailPage: React.FC = () => {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Order #{order.id}</h1>
-          <p className="text-muted-foreground">Created on {new Date(order.createdDate).toLocaleString()}</p>
+          <p className="text-muted-foreground">
+            Created on {new Date(order.createdDate).toLocaleString()}
+          </p>
         </div>
         <div className="flex gap-2">
           <button
@@ -143,7 +186,9 @@ const BeerOrderDetailPage: React.FC = () => {
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
             <h2 className="text-xl font-semibold">Status</h2>
-            <span className={`mt-1 inline-block rounded-full px-3 py-1 text-sm font-medium ${getStatusBadgeClass(order.status)}`}>
+            <span
+              className={`mt-1 inline-block rounded-full px-3 py-1 text-sm font-medium ${getStatusBadgeClass(order.status)}`}
+            >
               {order.status}
             </span>
           </div>
@@ -165,7 +210,7 @@ const BeerOrderDetailPage: React.FC = () => {
           <TabsTrigger value="items">Line Items</TabsTrigger>
           <TabsTrigger value="shipments">Shipments</TabsTrigger>
         </TabsList>
-        
+
         <TabsContent value="details" className="mt-6">
           <Card>
             <CardHeader>
@@ -211,7 +256,9 @@ const BeerOrderDetailPage: React.FC = () => {
                     </div>
                     <div className="flex justify-between border-b pb-2">
                       <span className="font-medium">Status:</span>
-                      <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${getStatusBadgeClass(order.status)}`}>
+                      <span
+                        className={`rounded-full px-2 py-0.5 text-xs font-medium ${getStatusBadgeClass(order.status)}`}
+                      >
                         {order.status}
                       </span>
                     </div>
@@ -221,7 +268,7 @@ const BeerOrderDetailPage: React.FC = () => {
             </CardContent>
           </Card>
         </TabsContent>
-        
+
         <TabsContent value="items" className="mt-6">
           <Card>
             <CardHeader>
@@ -242,7 +289,7 @@ const BeerOrderDetailPage: React.FC = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {order.lineItems.map((item: any) => (
+                    {order.lineItems.map((item: OrderLineItem) => (
                       <tr key={item.id} className="border-b">
                         <td className="p-2">{item.id}</td>
                         <td className="p-2">{item.beerName}</td>
@@ -256,7 +303,9 @@ const BeerOrderDetailPage: React.FC = () => {
                   </tbody>
                   <tfoot>
                     <tr className="border-t-2 font-bold">
-                      <td colSpan={6} className="p-2 text-right">Total:</td>
+                      <td colSpan={6} className="p-2 text-right">
+                        Total:
+                      </td>
                       <td className="p-2">${order.paymentAmount.toFixed(2)}</td>
                     </tr>
                   </tfoot>
@@ -265,7 +314,7 @@ const BeerOrderDetailPage: React.FC = () => {
             </CardContent>
           </Card>
         </TabsContent>
-        
+
         <TabsContent value="shipments" className="mt-6">
           <Card>
             <CardHeader>
@@ -274,7 +323,7 @@ const BeerOrderDetailPage: React.FC = () => {
             <CardContent>
               {order.shipments.length > 0 ? (
                 <div className="space-y-4">
-                  {order.shipments.map((shipment: any) => (
+                  {order.shipments.map((shipment: OrderShipment) => (
                     <div key={shipment.id} className="rounded-md border p-4">
                       <div className="grid gap-4 md:grid-cols-3">
                         <div>
@@ -299,10 +348,12 @@ const BeerOrderDetailPage: React.FC = () => {
                 </div>
               ) : (
                 <div className="flex h-40 items-center justify-center">
-                  <p className="text-lg text-muted-foreground">No shipments found for this order.</p>
+                  <p className="text-lg text-muted-foreground">
+                    No shipments found for this order.
+                  </p>
                 </div>
               )}
-              
+
               <div className="mt-6">
                 <button
                   onClick={() => navigate(`/beer-orders/${orderId}/shipments/new`)}

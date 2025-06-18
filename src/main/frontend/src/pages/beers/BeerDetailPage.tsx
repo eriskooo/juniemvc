@@ -1,13 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Edit, Trash2, ArrowLeft, Package, DollarSign, Calendar, BarChart3 } from 'lucide-react';
 import { PageContainer, PageHeader, PageContent } from '@components/layout';
 import { TabNavigation } from '@components/navigation';
 import { LoadingSpinner } from '@components/dialogs';
 import { Button } from '@components/ui';
-import { useToast, useConfirmationDialog, useTabs } from '@hooks';
-import { beerService } from '../../services/beerService';
-import type { BeerDto } from '../../api/models';
+import { useToast, useConfirmationDialog, useTabs } from '../../hooks';
+import beerService from '../../services/beerService';
+import type { BeerDto } from '../../api';
 import type { Tab } from '@components/navigation';
 
 /**
@@ -18,7 +18,7 @@ const BeerDetailPage: React.FC = () => {
   const { beerId } = useParams<{ beerId: string }>();
   const navigate = useNavigate();
   const { success, error } = useToast();
-  const { dialogState, confirmDelete } = useConfirmationDialog();
+  const { confirmDelete } = useConfirmationDialog();
 
   const [beer, setBeer] = useState<BeerDto | null>(null);
   const [loading, setLoading] = useState(true);
@@ -28,7 +28,7 @@ const BeerDetailPage: React.FC = () => {
   const { activeTab, changeTab } = useTabs(tabIds);
 
   // Load beer data
-  const loadBeer = async () => {
+  const loadBeer = useCallback(async () => {
     if (!beerId) return;
 
     setLoading(true);
@@ -41,11 +41,11 @@ const BeerDetailPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [beerId, error]);
 
   useEffect(() => {
     loadBeer();
-  }, [beerId]);
+  }, [loadBeer]);
 
   // Handle beer deletion
   const handleDeleteBeer = async () => {
@@ -105,9 +105,7 @@ const BeerDetailPage: React.FC = () => {
           </div>
           <div className="flex justify-between py-2 border-b">
             <span className="font-medium text-gray-600">Quantity on Hand:</span>
-            <span className="font-semibold">
-              {beer?.quantityOnHand?.toLocaleString() || '0'}
-            </span>
+            <span className="font-semibold">{beer?.quantityOnHand?.toLocaleString() || '0'}</span>
           </div>
         </div>
       </div>
@@ -130,7 +128,9 @@ const BeerDetailPage: React.FC = () => {
         </div>
         <div className="bg-green-50 p-4 rounded-lg">
           <div className="text-2xl font-bold text-green-600">
-            {beer?.price ? `$${(Number(beer.price) * (beer.quantityOnHand || 0)).toFixed(2)}` : '$0.00'}
+            {beer?.price
+              ? `$${(Number(beer.price) * (beer.quantityOnHand || 0)).toFixed(2)}`
+              : '$0.00'}
           </div>
           <div className="text-sm text-green-600">Total Value</div>
         </div>

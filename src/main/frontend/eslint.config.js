@@ -32,5 +32,8 @@ export default tseslint.config(
       ],
       'prettier/prettier': 'error',
     },
+    linterOptions: {
+      reportUnusedDisableDirectives: false,
+    },
   },
 )

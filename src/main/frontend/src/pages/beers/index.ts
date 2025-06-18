@@ -1,6 +1,6 @@
 /**
  * Beer-related page components
- * 
+ *
  * This module re-exports all beer-related page components from the beers directory.
  */
 

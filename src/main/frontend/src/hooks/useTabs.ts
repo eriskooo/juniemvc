@@ -11,15 +11,18 @@ export interface UseTabsOptions {
  */
 export const useTabs = (tabIds: string[], options: UseTabsOptions = {}) => {
   const { defaultTab = tabIds[0], onTabChange } = options;
-  
+
   const [activeTab, setActiveTab] = useState<string>(defaultTab);
 
-  const changeTab = useCallback((tabId: string) => {
-    if (tabIds.includes(tabId)) {
-      setActiveTab(tabId);
-      onTabChange?.(tabId);
-    }
-  }, [tabIds, onTabChange]);
+  const changeTab = useCallback(
+    (tabId: string) => {
+      if (tabIds.includes(tabId)) {
+        setActiveTab(tabId);
+        onTabChange?.(tabId);
+      }
+    },
+    [tabIds, onTabChange]
+  );
 
   const nextTab = useCallback(() => {
     const currentIndex = tabIds.indexOf(activeTab);

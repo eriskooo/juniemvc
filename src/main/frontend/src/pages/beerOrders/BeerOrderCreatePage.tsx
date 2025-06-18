@@ -1,6 +1,41 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardHeader, CardTitle, Input, Label, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@components/ui';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  Input,
+  Label,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@components/ui';
+
+// Local interfaces for form data
+interface CustomerOption {
+  id: number;
+  name: string;
+  email: string;
+}
+
+interface BeerOption {
+  id: number;
+  name: string;
+  style: string;
+  price: number;
+  quantityOnHand: number;
+}
+
+interface LineItem {
+  id: number;
+  beerId: string | number;
+  beerName: string;
+  quantity: number;
+  price: number;
+}
 
 /**
  * Beer Order Create page component
@@ -10,12 +45,12 @@ const BeerOrderCreatePage: React.FC = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  const [customers, setCustomers] = useState<any[]>([]);
-  const [beers, setBeers] = useState<any[]>([]);
+  const [customers, setCustomers] = useState<CustomerOption[]>([]);
+  const [beers, setBeers] = useState<BeerOption[]>([]);
   const [selectedCustomerId, setSelectedCustomerId] = useState('');
   const [customerRef, setCustomerRef] = useState('');
-  const [lineItems, setLineItems] = useState<any[]>([
-    { id: 1, beerId: '', beerName: '', quantity: 1, price: 0 }
+  const [lineItems, setLineItems] = useState<LineItem[]>([
+    { id: 1, beerId: '', beerName: '', quantity: 1, price: 0 },
   ]);
 
   // Simulate fetching customers and beers data
@@ -25,14 +60,14 @@ const BeerOrderCreatePage: React.FC = () => {
     const mockCustomers = [
       { id: 1, name: 'John Doe', email: 'john.doe@example.com' },
       { id: 2, name: 'Jane Smith', email: 'jane.smith@example.com' },
-      { id: 3, name: 'Bob Johnson', email: 'bob.johnson@example.com' }
+      { id: 3, name: 'Bob Johnson', email: 'bob.johnson@example.com' },
     ];
 
     const mockBeers = [
       { id: 1, name: 'Mango Bobs', style: 'IPA', price: 12.99, quantityOnHand: 100 },
       { id: 2, name: 'Galaxy Cat', style: 'PALE_ALE', price: 11.99, quantityOnHand: 75 },
       { id: 3, name: 'Pinball Porter', style: 'PORTER', price: 13.99, quantityOnHand: 50 },
-      { id: 4, name: 'Pumpkin Ale', style: 'ALE', price: 10.99, quantityOnHand: 120 }
+      { id: 4, name: 'Pumpkin Ale', style: 'ALE', price: 10.99, quantityOnHand: 120 },
     ];
 
     // Simulate API call delay
@@ -47,7 +82,7 @@ const BeerOrderCreatePage: React.FC = () => {
 
   const handleCustomerChange = (customerId: string) => {
     setSelectedCustomerId(customerId);
-    
+
     // Generate a customer reference based on the selected customer
     // In a real app, this might be more sophisticated or handled by the backend
     const customer = customers.find(c => c.id.toString() === customerId);
@@ -59,14 +94,14 @@ const BeerOrderCreatePage: React.FC = () => {
 
   const handleBeerChange = (beerId: string, index: number) => {
     const beer = beers.find(b => b.id.toString() === beerId);
-    
+
     if (beer) {
       const updatedLineItems = [...lineItems];
       updatedLineItems[index] = {
         ...updatedLineItems[index],
         beerId: beer.id,
         beerName: beer.name,
-        price: beer.price
+        price: beer.price,
       };
       setLineItems(updatedLineItems);
     }
@@ -76,7 +111,7 @@ const BeerOrderCreatePage: React.FC = () => {
     const updatedLineItems = [...lineItems];
     updatedLineItems[index] = {
       ...updatedLineItems[index],
-      quantity: parseInt(quantity) || 0
+      quantity: parseInt(quantity) || 0,
     };
     setLineItems(updatedLineItems);
   };
@@ -84,7 +119,7 @@ const BeerOrderCreatePage: React.FC = () => {
   const addLineItem = () => {
     setLineItems([
       ...lineItems,
-      { id: lineItems.length + 1, beerId: '', beerName: '', quantity: 1, price: 0 }
+      { id: lineItems.length + 1, beerId: '', beerName: '', quantity: 1, price: 0 },
     ]);
   };
 
@@ -97,20 +132,20 @@ const BeerOrderCreatePage: React.FC = () => {
 
   const calculateTotal = () => {
     return lineItems.reduce((total, item) => {
-      return total + (item.price * item.quantity);
+      return total + item.price * item.quantity;
     }, 0);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!selectedCustomerId || lineItems.some(item => !item.beerId)) {
       alert('Please select a customer and beer for each line item');
       return;
     }
-    
+
     setSubmitting(true);
-    
+
     // In a real application, you would submit the order data to the API
     // For now, we'll just simulate a successful submission
     setTimeout(() => {
@@ -164,7 +199,7 @@ const BeerOrderCreatePage: React.FC = () => {
                 <Input
                   id="customerRef"
                   value={customerRef}
-                  onChange={(e) => setCustomerRef(e.target.value)}
+                  onChange={e => setCustomerRef(e.target.value)}
                   placeholder="Customer reference"
                   disabled={!selectedCustomerId}
                   required
@@ -184,9 +219,9 @@ const BeerOrderCreatePage: React.FC = () => {
                 <div key={index} className="grid gap-4 rounded-md border p-4 md:grid-cols-4">
                   <div className="space-y-2">
                     <Label htmlFor={`beer-${index}`}>Beer</Label>
-                    <Select 
-                      value={item.beerId.toString()} 
-                      onValueChange={(value) => handleBeerChange(value, index)}
+                    <Select
+                      value={item.beerId.toString()}
+                      onValueChange={value => handleBeerChange(value, index)}
                       required
                     >
                       <SelectTrigger id={`beer-${index}`}>
@@ -208,7 +243,7 @@ const BeerOrderCreatePage: React.FC = () => {
                       type="number"
                       min="1"
                       value={item.quantity}
-                      onChange={(e) => handleQuantityChange(e.target.value, index)}
+                      onChange={e => handleQuantityChange(e.target.value, index)}
                       required
                     />
                   </div>
@@ -246,9 +281,7 @@ const BeerOrderCreatePage: React.FC = () => {
                 >
                   Add Item
                 </button>
-                <div className="text-xl font-bold">
-                  Total: ${calculateTotal().toFixed(2)}
-                </div>
+                <div className="text-xl font-bold">Total: ${calculateTotal().toFixed(2)}</div>
               </div>
             </div>
           </CardContent>

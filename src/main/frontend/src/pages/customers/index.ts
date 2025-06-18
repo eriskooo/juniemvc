@@ -1,6 +1,6 @@
 /**
  * Customer Pages
- * 
+ *
  * This module re-exports all customer-related page components.
  */
 

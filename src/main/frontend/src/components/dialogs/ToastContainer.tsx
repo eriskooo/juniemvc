@@ -1,10 +1,15 @@
-import React from 'react';
 import { createPortal } from 'react-dom';
 import { useToast } from '../../contexts/ToastContext';
 import Toast from './Toast';
 
 interface ToastContainerProps {
-  position?: 'top-right' | 'top-left' | 'bottom-right' | 'bottom-left' | 'top-center' | 'bottom-center';
+  position?:
+    | 'top-right'
+    | 'top-left'
+    | 'bottom-right'
+    | 'bottom-left'
+    | 'top-center'
+    | 'bottom-center';
   className?: string;
 }
 
@@ -49,7 +54,7 @@ const ToastContainer: React.FC<ToastContainerProps> = ({
         ${className}
       `}
     >
-      {toasts.map((toast) => (
+      {toasts.map(toast => (
         <div key={toast.id} className="pointer-events-auto">
           <Toast toast={toast} onRemove={removeToast} />
         </div>

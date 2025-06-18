@@ -1,13 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus } from 'lucide-react';
 import { PageContainer, PageHeader, PageContent } from '@components/layout';
 import { DataTable, TableFilters, TableActions, createCommonActions } from '@components/tables';
 import { Button } from '@components/ui';
-import { useToast, useConfirmationDialog } from '@hooks';
-import { beerService } from '../../services/beerService';
-import type { BeerDto } from '../../api/models';
-import type { Column, FilterValue } from '@components/tables';
+import { useToast, useConfirmationDialog } from '../../hooks';
+import beerService from '../../services/beerService';
+import type { BeerDto } from '../../api';
+import type { Column, FilterValue, SortConfig } from '@components/tables';
 
 /**
  * Beer listing page with pagination, filtering, and actions
@@ -15,7 +15,7 @@ import type { Column, FilterValue } from '@components/tables';
 const BeerListPage: React.FC = () => {
   const navigate = useNavigate();
   const { success, error } = useToast();
-  const { dialogState, confirmDelete } = useConfirmationDialog();
+  const { confirmDelete } = useConfirmationDialog();
 
   const [beers, setBeers] = useState<BeerDto[]>([]);
   const [loading, setLoading] = useState(true);
@@ -25,21 +25,21 @@ const BeerListPage: React.FC = () => {
     total: 0,
   });
   const [filters, setFilters] = useState<FilterValue[]>([]);
-  const [sortConfig, setSortConfig] = useState({ key: 'beerName', direction: 'asc' as const });
+  const [sortConfig, setSortConfig] = useState<SortConfig>({ key: 'beerName', direction: 'asc' });
 
   // Load beers data
-  const loadBeers = async () => {
+  const loadBeers = useCallback(async () => {
     setLoading(true);
     try {
       // Extract filter values
       const searchFilter = filters.find(f => f.key === 'search');
       const styleFilter = filters.find(f => f.key === 'beerStyle');
 
-      const response = await beerService.getAllBeers(
-        searchFilter?.value,
-        styleFilter?.value,
-        pagination.page - 1, // API uses 0-based pagination
-        pagination.pageSize
+      const response = await beerService.getBeers(
+        { page: pagination.page - 1, size: pagination.pageSize }, // API uses 0-based pagination
+        { sort: sortConfig.key, direction: sortConfig.direction },
+        searchFilter?.value ? String(searchFilter.value) : undefined,
+        styleFilter?.value ? String(styleFilter.value) : undefined
       );
 
       setBeers(response.content || []);
@@ -53,12 +53,12 @@ const BeerListPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [pagination.page, pagination.pageSize, filters, sortConfig, error]);
 
   // Load data on component mount and when dependencies change
   useEffect(() => {
     loadBeers();
-  }, [pagination.page, pagination.pageSize, filters, sortConfig]);
+  }, [loadBeers]);
 
   // Handle page change
   const handlePageChange = (page: number) => {
@@ -102,7 +102,7 @@ const BeerListPage: React.FC = () => {
             onClick={() => navigate(`/beers/${beer.id}`)}
             className="text-primary hover:underline"
           >
-            {value}
+            {String(value)}
           </button>
         </div>
       ),
@@ -117,20 +117,20 @@ const BeerListPage: React.FC = () => {
       header: 'Price',
       sortable: true,
       align: 'right',
-      render: (value) => value ? `$${Number(value).toFixed(2)}` : '-',
+      render: value => (value ? `$${Number(value).toFixed(2)}` : '-'),
     },
     {
       key: 'quantityOnHand',
       header: 'Quantity',
       sortable: true,
       align: 'right',
-      render: (value) => value?.toLocaleString() || '0',
+      render: value => value?.toLocaleString() || '0',
     },
     {
       key: 'createdDate',
       header: 'Created',
       sortable: true,
-      render: (value) => value ? new Date(value).toLocaleDateString() : '-',
+      render: value => (value ? new Date(String(value)).toLocaleDateString() : '-'),
     },
     {
       key: 'actions',
@@ -142,9 +142,9 @@ const BeerListPage: React.FC = () => {
         <TableActions
           row={beer}
           actions={createCommonActions({
-            onView: (beer) => navigate(`/beers/${beer.id}`),
-            onEdit: (beer) => navigate(`/beers/${beer.id}/edit`),
-            onDelete: (beer) => handleDeleteBeer(beer),
+            onView: (beer: BeerDto) => navigate(`/beers/${beer.id}`),
+            onEdit: (beer: BeerDto) => navigate(`/beers/${beer.id}/edit`),
+            onDelete: (beer: BeerDto) => handleDeleteBeer(beer),
           })}
         />
       ),

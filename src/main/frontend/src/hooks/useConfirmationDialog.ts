@@ -71,33 +71,36 @@ export const useConfirmationDialog = () => {
     setDialogState(prev => ({ ...prev, open: false }));
   }, []);
 
-  const confirmDelete = useCallback((
-    itemName: string,
-    onConfirm: () => void | Promise<void>
-  ) => {
-    showConfirmation({
-      title: 'Delete Confirmation',
-      description: `Are you sure you want to delete "${itemName}"? This action cannot be undone.`,
-      confirmLabel: 'Delete',
-      cancelLabel: 'Cancel',
-      variant: 'destructive',
-      onConfirm,
-    });
-  }, [showConfirmation]);
+  const confirmDelete = useCallback(
+    (itemName: string, onConfirm: () => void | Promise<void>) => {
+      showConfirmation({
+        title: 'Delete Confirmation',
+        description: `Are you sure you want to delete "${itemName}"? This action cannot be undone.`,
+        confirmLabel: 'Delete',
+        cancelLabel: 'Cancel',
+        variant: 'destructive',
+        onConfirm,
+      });
+    },
+    [showConfirmation]
+  );
 
-  const confirmAction = useCallback((
-    title: string,
-    description: string,
-    onConfirm: () => void | Promise<void>,
-    options?: Partial<ConfirmationOptions>
-  ) => {
-    showConfirmation({
-      title,
-      description,
-      onConfirm,
-      ...options,
-    });
-  }, [showConfirmation]);
+  const confirmAction = useCallback(
+    (
+      title: string,
+      description: string,
+      onConfirm: () => void | Promise<void>,
+      options?: Partial<ConfirmationOptions>
+    ) => {
+      showConfirmation({
+        title,
+        description,
+        onConfirm,
+        ...options,
+      });
+    },
+    [showConfirmation]
+  );
 
   return {
     dialogState,

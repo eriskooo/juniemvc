@@ -1,4 +1,3 @@
-import React from 'react';
 import { Loader2 } from 'lucide-react';
 
 interface LoadingSpinnerProps {
@@ -34,18 +33,12 @@ const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
   const spinner = (
     <div className={`flex items-center gap-2 ${className}`}>
       <Loader2 className={`${getSizeClasses()} animate-spin text-primary`} />
-      {message && (
-        <span className="text-sm text-gray-600 font-medium">{message}</span>
-      )}
+      {message && <span className="text-sm text-gray-600 font-medium">{message}</span>}
     </div>
   );
 
   if (centered) {
-    return (
-      <div className="flex items-center justify-center p-4">
-        {spinner}
-      </div>
-    );
+    return <div className="flex items-center justify-center p-4">{spinner}</div>;
   }
 
   return spinner;

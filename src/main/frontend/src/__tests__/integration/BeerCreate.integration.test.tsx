@@ -1,14 +1,12 @@
-import React from 'react';
 import { render, screen, waitFor } from '../../test/utils';
 import userEvent from '@testing-library/user-event';
 import BeerCreatePage from '../../pages/beers/BeerCreatePage';
-import { mockBeerService } from '../../test/mocks/services';
 import { createMockBeer } from '../../test/utils';
+import apiService from '../../services/api';
+import { useForm, useToast } from '../../hooks';
 
-// Mock the services
-jest.mock('../../services/beerService', () => ({
-  beerService: mockBeerService,
-}));
+// Mock the API service that beerService depends on
+jest.mock('../../services/api');
 
 // Mock the hooks
 jest.mock('../../hooks', () => ({
@@ -26,15 +24,19 @@ jest.mock('react-router-dom', () => ({
   useNavigate: () => mockNavigate,
 }));
 
+// Type the mocked services and hooks
+const mockApiService = apiService as jest.Mocked<typeof apiService>;
+const mockUseForm = useForm as jest.MockedFunction<typeof useForm>;
+const mockUseToast = useToast as jest.MockedFunction<typeof useToast>;
+
 describe('Beer Creation Integration', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockBeerService.createBeer.mockClear();
   });
 
   it('should complete the full beer creation flow', async () => {
     const user = userEvent.setup();
-    
+
     // Mock successful beer creation
     const newBeer = createMockBeer({
       id: 1,
@@ -43,26 +45,32 @@ describe('Beer Creation Integration', () => {
       price: 12.99,
       quantityOnHand: 100,
     });
-    mockBeerService.createBeer.mockResolvedValue(newBeer);
+    mockApiService.createWithNotification.mockResolvedValue(newBeer);
 
     // Mock the useForm hook to return controlled form behavior
-    const mockUseForm = require('../../hooks').useForm;
     const mockFormState = {
       values: {
-        beerName: '',
-        beerStyle: '',
-        upc: '',
-        price: undefined,
-        quantityOnHand: undefined,
+        beerName: 'Test Beer',
+        beerStyle: 'IPA',
+        upc: '123456789',
+        price: 12.99,
+        quantityOnHand: 100,
         imageUrl: undefined,
       },
       errors: {},
-      isValid: true,
+      isValid: true, // Make form valid so submit button can be clicked
       isSubmitting: false,
       setValue: jest.fn(),
+      setValues: jest.fn(),
+      setError: jest.fn(),
+      clearError: jest.fn(),
+      clearErrors: jest.fn(),
+      validateField: jest.fn(),
+      validateAll: jest.fn(),
       handleSubmit: jest.fn(),
+      reset: jest.fn(),
     };
-    mockUseForm.mockReturnValue(mockFormState);
+    (mockUseForm as jest.MockedFunction<typeof useForm>).mockReturnValue(mockFormState);
 
     render(<BeerCreatePage />);
 
@@ -72,7 +80,7 @@ describe('Beer Creation Integration', () => {
 
     // Check that form fields are present
     expect(screen.getByLabelText(/beer name/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/beer style/i)).toBeInTheDocument();
+    expect(screen.getByText('Beer Style')).toBeInTheDocument(); // Look for exact label text
     expect(screen.getByLabelText(/price/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/quantity on hand/i)).toBeInTheDocument();
 
@@ -103,10 +111,7 @@ describe('Beer Creation Integration', () => {
   });
 
   it('should handle form validation errors', async () => {
-    const user = userEvent.setup();
-    
     // Mock form with validation errors
-    const mockUseForm = require('../../hooks').useForm;
     const mockFormState = {
       values: {
         beerName: '',
@@ -124,9 +129,16 @@ describe('Beer Creation Integration', () => {
       isValid: false,
       isSubmitting: false,
       setValue: jest.fn(),
+      setValues: jest.fn(),
+      setError: jest.fn(),
+      clearError: jest.fn(),
+      clearErrors: jest.fn(),
+      validateField: jest.fn(),
+      validateAll: jest.fn(),
       handleSubmit: jest.fn(),
+      reset: jest.fn(),
     };
-    mockUseForm.mockReturnValue(mockFormState);
+    (mockUseForm as jest.MockedFunction<typeof useForm>).mockReturnValue(mockFormState);
 
     render(<BeerCreatePage />);
 
@@ -142,14 +154,12 @@ describe('Beer Creation Integration', () => {
 
   it('should handle API errors during beer creation', async () => {
     const user = userEvent.setup();
-    
+
     // Mock API error
-    mockBeerService.createBeer.mockRejectedValue(new Error('API Error'));
+    mockApiService.createWithNotification.mockRejectedValue(new Error('API Error'));
 
     // Mock form with valid data but API error
-    const mockUseForm = require('../../hooks').useForm;
-    const mockToast = require('../../hooks').useToast();
-    
+
     const mockFormState = {
       values: {
         beerName: 'Test Beer',
@@ -163,14 +173,23 @@ describe('Beer Creation Integration', () => {
       isValid: true,
       isSubmitting: false,
       setValue: jest.fn(),
-      handleSubmit: jest.fn((formData) => {
+      setValues: jest.fn(),
+      setError: jest.fn(),
+      clearError: jest.fn(),
+      clearErrors: jest.fn(),
+      validateField: jest.fn(),
+      validateAll: jest.fn(),
+      handleSubmit: jest.fn(async formData => {
         // Simulate the actual form submission logic
-        return mockBeerService.createBeer(formData).catch(() => {
-          mockToast.error('Failed to create beer. Please try again.');
-        });
+        try {
+          await mockApiService.createWithNotification('/api/v1/beers', formData);
+        } catch {
+          mockUseToast().error('Failed to create beer. Please try again.');
+        }
       }),
+      reset: jest.fn(),
     };
-    mockUseForm.mockReturnValue(mockFormState);
+    (mockUseForm as jest.MockedFunction<typeof useForm>).mockReturnValue(mockFormState);
 
     render(<BeerCreatePage />);
 
@@ -185,10 +204,7 @@ describe('Beer Creation Integration', () => {
   });
 
   it('should show loading state during submission', async () => {
-    const user = userEvent.setup();
-    
     // Mock form in submitting state
-    const mockUseForm = require('../../hooks').useForm;
     const mockFormState = {
       values: {
         beerName: 'Test Beer',
@@ -202,25 +218,29 @@ describe('Beer Creation Integration', () => {
       isValid: true,
       isSubmitting: true,
       setValue: jest.fn(),
+      setValues: jest.fn(),
+      setError: jest.fn(),
+      clearError: jest.fn(),
+      clearErrors: jest.fn(),
+      validateField: jest.fn(),
+      validateAll: jest.fn(),
       handleSubmit: jest.fn(),
+      reset: jest.fn(),
     };
-    mockUseForm.mockReturnValue(mockFormState);
+    (mockUseForm as jest.MockedFunction<typeof useForm>).mockReturnValue(mockFormState);
 
     render(<BeerCreatePage />);
 
     // Check that submit button shows loading state
-    const submitButton = screen.getByRole('button', { name: /create beer/i });
+    const submitButton = screen.getByRole('button', { name: /saving/i });
     expect(submitButton).toBeDisabled();
-    
+
     // Check that cancel button is also disabled during submission
     const cancelButton = screen.getByRole('button', { name: /cancel/i });
     expect(cancelButton).toBeDisabled();
   });
 
   it('should handle image upload functionality', async () => {
-    const user = userEvent.setup();
-    
-    const mockUseForm = require('../../hooks').useForm;
     const mockFormState = {
       values: {
         beerName: '',
@@ -234,9 +254,16 @@ describe('Beer Creation Integration', () => {
       isValid: true,
       isSubmitting: false,
       setValue: jest.fn(),
+      setValues: jest.fn(),
+      setError: jest.fn(),
+      clearError: jest.fn(),
+      clearErrors: jest.fn(),
+      validateField: jest.fn(),
+      validateAll: jest.fn(),
       handleSubmit: jest.fn(),
+      reset: jest.fn(),
     };
-    mockUseForm.mockReturnValue(mockFormState);
+    (mockUseForm as jest.MockedFunction<typeof useForm>).mockReturnValue(mockFormState);
 
     render(<BeerCreatePage />);
 

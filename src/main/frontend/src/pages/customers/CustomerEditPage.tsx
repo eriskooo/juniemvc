@@ -5,15 +5,15 @@ import { PageContainer, PageHeader, PageContent } from '@components/layout';
 import { FormWrapper, FormField, FormActions } from '@components/forms';
 import { Input, Button } from '@components/ui';
 import { LoadingSpinner } from '@components/dialogs';
-import { useForm, useToast } from '@hooks';
+import { useForm, useToast } from '../../hooks';
 import { customerValidationRules } from '../../utils/validation';
-import { customerService } from '../../services/customerService';
-import type { CustomerDto } from '../../api/models';
+import customerService from '../../services/customerService';
+import type { CustomerDto } from '../../types/customer';
 
-interface CustomerFormData {
-  customerName: string;
+interface CustomerFormData extends Record<string, unknown> {
+  name: string;
   email: string;
-  phone: string;
+  phoneNumber: string;
   addressLine1: string;
   addressLine2: string;
   city: string;
@@ -33,9 +33,9 @@ const CustomerEditPage: React.FC = () => {
   const [customer, setCustomer] = useState<CustomerDto | null>(null);
 
   const initialValues: CustomerFormData = {
-    customerName: '',
+    name: '',
     email: '',
-    phone: '',
+    phoneNumber: '',
     addressLine1: '',
     addressLine2: '',
     city: '',
@@ -43,33 +43,26 @@ const CustomerEditPage: React.FC = () => {
     postalCode: '',
   };
 
-  const {
-    values,
-    errors,
-    isValid,
-    isSubmitting,
-    setValue,
-    setValues,
-    handleSubmit,
-  } = useForm({
+  const { values, errors, isValid, isSubmitting, setValue, setValues, handleSubmit } = useForm({
     initialValues,
     validationRules: {
-      customerName: customerValidationRules.customerName,
+      name: customerValidationRules.customerName,
       email: customerValidationRules.email,
     },
-    onSubmit: async (formData) => {
+    onSubmit: async (formData: CustomerFormData) => {
       if (!customer) return;
 
       try {
         const customerData: Omit<CustomerDto, 'id' | 'version' | 'createdDate' | 'updateDate'> = {
-          customerName: formData.customerName,
+          name: formData.name,
           email: formData.email || undefined,
-          phone: formData.phone || undefined,
-          addressLine1: formData.addressLine1 || undefined,
+          phoneNumber: formData.phoneNumber || undefined,
+          addressLine1: formData.addressLine1,
           addressLine2: formData.addressLine2 || undefined,
-          city: formData.city || undefined,
-          state: formData.state || undefined,
-          postalCode: formData.postalCode || undefined,
+          city: formData.city,
+          state: formData.state,
+          postalCode: formData.postalCode,
+          beerOrders: customer.beerOrders, // Include existing beer orders
         };
 
         const updatedCustomer = await customerService.updateCustomer(customer.id!, customerData);
@@ -77,7 +70,7 @@ const CustomerEditPage: React.FC = () => {
         // Optimistic update - update local state immediately
         setCustomer(updatedCustomer);
 
-        success(`Customer "${updatedCustomer.customerName}" updated successfully`);
+        success(`Customer "${updatedCustomer.name}" updated successfully`);
         navigate(`/customers/${updatedCustomer.id}`);
       } catch (err) {
         error('Failed to update customer. Please try again.');
@@ -102,9 +95,9 @@ const CustomerEditPage: React.FC = () => {
 
         // Pre-populate form with existing customer data
         setValues({
-          customerName: customerData.customerName || '',
+          name: customerData.name || '',
           email: customerData.email || '',
-          phone: customerData.phone || '',
+          phoneNumber: customerData.phoneNumber || '',
           addressLine1: customerData.addressLine1 || '',
           addressLine2: customerData.addressLine2 || '',
           city: customerData.city || '',
@@ -156,7 +149,7 @@ const CustomerEditPage: React.FC = () => {
     <PageContainer>
       <PageHeader
         title="Edit Customer"
-        subtitle={`Update "${customer.customerName}" information`}
+        subtitle={`Update "${customer.name}" information`}
         actions={
           <Button variant="outline" onClick={handleCancel}>
             <ArrowLeft className="h-4 w-4 mr-2" />
@@ -175,14 +168,14 @@ const CustomerEditPage: React.FC = () => {
                 <FormField
                   label="Customer Name"
                   required
-                  error={errors.customerName?.[0]}
+                  error={errors.name?.[0]}
                   htmlFor="customerName"
                 >
                   <Input
                     id="customerName"
                     placeholder="Enter customer name"
-                    value={values.customerName}
-                    onChange={(e) => setValue('customerName', e.target.value)}
+                    value={values.name}
+                    onChange={e => setValue('name', e.target.value)}
                   />
                 </FormField>
 
@@ -197,20 +190,16 @@ const CustomerEditPage: React.FC = () => {
                     type="email"
                     placeholder="Enter email address"
                     value={values.email}
-                    onChange={(e) => setValue('email', e.target.value)}
+                    onChange={e => setValue('email', e.target.value)}
                   />
                 </FormField>
 
-                <FormField
-                  label="Phone"
-                  htmlFor="phone"
-                  helpText="Optional phone number"
-                >
+                <FormField label="Phone" htmlFor="phone" helpText="Optional phone number">
                   <Input
                     id="phone"
                     placeholder="Enter phone number"
-                    value={values.phone}
-                    onChange={(e) => setValue('phone', e.target.value)}
+                    value={values.phoneNumber}
+                    onChange={e => setValue('phoneNumber', e.target.value)}
                   />
                 </FormField>
               </div>
@@ -220,16 +209,12 @@ const CustomerEditPage: React.FC = () => {
             <div>
               <h3 className="text-lg font-semibold mb-4">Address Information</h3>
               <div className="grid gap-6 md:grid-cols-2">
-                <FormField
-                  label="Address Line 1"
-                  htmlFor="addressLine1"
-                  helpText="Street address"
-                >
+                <FormField label="Address Line 1" htmlFor="addressLine1" helpText="Street address">
                   <Input
                     id="addressLine1"
                     placeholder="Enter street address"
                     value={values.addressLine1}
-                    onChange={(e) => setValue('addressLine1', e.target.value)}
+                    onChange={e => setValue('addressLine1', e.target.value)}
                   />
                 </FormField>
 
@@ -242,43 +227,34 @@ const CustomerEditPage: React.FC = () => {
                     id="addressLine2"
                     placeholder="Apartment, suite, etc."
                     value={values.addressLine2}
-                    onChange={(e) => setValue('addressLine2', e.target.value)}
+                    onChange={e => setValue('addressLine2', e.target.value)}
                   />
                 </FormField>
 
-                <FormField
-                  label="City"
-                  htmlFor="city"
-                >
+                <FormField label="City" htmlFor="city">
                   <Input
                     id="city"
                     placeholder="Enter city"
                     value={values.city}
-                    onChange={(e) => setValue('city', e.target.value)}
+                    onChange={e => setValue('city', e.target.value)}
                   />
                 </FormField>
 
-                <FormField
-                  label="State"
-                  htmlFor="state"
-                >
+                <FormField label="State" htmlFor="state">
                   <Input
                     id="state"
                     placeholder="Enter state"
                     value={values.state}
-                    onChange={(e) => setValue('state', e.target.value)}
+                    onChange={e => setValue('state', e.target.value)}
                   />
                 </FormField>
 
-                <FormField
-                  label="Postal Code"
-                  htmlFor="postalCode"
-                >
+                <FormField label="Postal Code" htmlFor="postalCode">
                   <Input
                     id="postalCode"
                     placeholder="Enter postal code"
                     value={values.postalCode}
-                    onChange={(e) => setValue('postalCode', e.target.value)}
+                    onChange={e => setValue('postalCode', e.target.value)}
                   />
                 </FormField>
               </div>

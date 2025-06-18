@@ -1,23 +1,20 @@
-import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig } from 'axios';
-import { env } from '@utils/env';
+import axios from 'axios';
+import type {
+  AxiosInstance,
+  AxiosRequestConfig,
+  AxiosResponse,
+  InternalAxiosRequestConfig,
+} from 'axios';
+import { getApiBaseUrl } from '@utils/env';
 import { handleApiError, handleAndNotifyError } from '@utils/errorHandler';
 import { apiLogger } from '@utils/logger';
-import { 
-  PaginationParams, 
-  SortParams, 
-  FilterParam, 
-  QueryParams,
-  createPaginationParams,
-  createSortParams,
-  createQueryParams,
-  formatUrl,
-  createUrlWithQueryParams
-} from '@utils/apiUtils';
+import type { PaginationParams, SortParams, FilterParam } from '@utils/apiUtils';
+import { createQueryParams, formatUrl, createUrlWithQueryParams } from '@utils/apiUtils';
 
 /**
  * Base API configuration
  */
-const API_BASE_URL = env.API_URL || '/api';
+const API_BASE_URL = getApiBaseUrl();
 
 /**
  * Configuration for the Axios instance
@@ -75,7 +72,7 @@ class ApiService {
 
         return config;
       },
-      (error) => {
+      error => {
         // Log request errors
         apiLogger.error('Request Error:', error);
         return Promise.reject(error);
@@ -97,7 +94,7 @@ class ApiService {
 
         return response;
       },
-      (error) => {
+      error => {
         // Log response errors
         if (error.response) {
           const method = error.config?.method?.toUpperCase() || 'UNKNOWN';
@@ -145,7 +142,7 @@ class ApiService {
   /**
    * Make a POST request
    */
-  public async post<T>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
+  public async post<T>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<T> {
     try {
       const response = await this.api.post<T>(url, data, config);
       return response.data;
@@ -157,7 +154,7 @@ class ApiService {
   /**
    * Make a PUT request
    */
-  public async put<T>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
+  public async put<T>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<T> {
     try {
       const response = await this.api.put<T>(url, data, config);
       return response.data;
@@ -169,7 +166,7 @@ class ApiService {
   /**
    * Make a PATCH request
    */
-  public async patch<T>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
+  public async patch<T>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<T> {
     try {
       const response = await this.api.patch<T>(url, data, config);
       return response.data;
@@ -205,7 +202,11 @@ class ApiService {
   /**
    * Make a POST request with error notification
    */
-  public async postWithNotification<T>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
+  public async postWithNotification<T>(
+    url: string,
+    data?: unknown,
+    config?: AxiosRequestConfig
+  ): Promise<T> {
     try {
       const response = await this.api.post<T>(url, data, config);
       return response.data;
@@ -217,7 +218,11 @@ class ApiService {
   /**
    * Make a PUT request with error notification
    */
-  public async putWithNotification<T>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
+  public async putWithNotification<T>(
+    url: string,
+    data?: unknown,
+    config?: AxiosRequestConfig
+  ): Promise<T> {
     try {
       const response = await this.api.put<T>(url, data, config);
       return response.data;
@@ -229,7 +234,11 @@ class ApiService {
   /**
    * Make a PATCH request with error notification
    */
-  public async patchWithNotification<T>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
+  public async patchWithNotification<T>(
+    url: string,
+    data?: unknown,
+    config?: AxiosRequestConfig
+  ): Promise<T> {
     try {
       const response = await this.api.patch<T>(url, data, config);
       return response.data;
@@ -252,7 +261,7 @@ class ApiService {
 
   /**
    * Get a paginated list of resources
-   * 
+   *
    * @param url - Base URL for the resource
    * @param pagination - Pagination parameters
    * @param sort - Sorting parameters
@@ -274,7 +283,7 @@ class ApiService {
 
   /**
    * Get a paginated list of resources with error notification
-   * 
+   *
    * @param url - Base URL for the resource
    * @param pagination - Pagination parameters
    * @param sort - Sorting parameters
@@ -296,7 +305,7 @@ class ApiService {
 
   /**
    * Get a resource by ID
-   * 
+   *
    * @param url - URL template with {id} placeholder
    * @param id - Resource ID
    * @param config - Additional Axios request configuration
@@ -313,7 +322,7 @@ class ApiService {
 
   /**
    * Get a resource by ID with error notification
-   * 
+   *
    * @param url - URL template with {id} placeholder
    * @param id - Resource ID
    * @param config - Additional Axios request configuration
@@ -330,23 +339,19 @@ class ApiService {
 
   /**
    * Create a resource
-   * 
+   *
    * @param url - URL for the resource
    * @param data - Resource data
    * @param config - Additional Axios request configuration
    * @returns Promise with the created resource
    */
-  public async create<T>(
-    url: string,
-    data: any,
-    config?: AxiosRequestConfig
-  ): Promise<T> {
+  public async create<T>(url: string, data: unknown, config?: AxiosRequestConfig): Promise<T> {
     return this.post<T>(url, data, config);
   }
 
   /**
    * Create a resource with error notification
-   * 
+   *
    * @param url - URL for the resource
    * @param data - Resource data
    * @param config - Additional Axios request configuration
@@ -354,7 +359,7 @@ class ApiService {
    */
   public async createWithNotification<T>(
     url: string,
-    data: any,
+    data: unknown,
     config?: AxiosRequestConfig
   ): Promise<T> {
     return this.postWithNotification<T>(url, data, config);
@@ -362,7 +367,7 @@ class ApiService {
 
   /**
    * Update a resource
-   * 
+   *
    * @param url - URL template with {id} placeholder
    * @param id - Resource ID
    * @param data - Resource data
@@ -372,7 +377,7 @@ class ApiService {
   public async update<T>(
     url: string,
     id: string | number,
-    data: any,
+    data: unknown,
     config?: AxiosRequestConfig
   ): Promise<T> {
     const fullUrl = formatUrl(url, { id });
@@ -381,7 +386,7 @@ class ApiService {
 
   /**
    * Update a resource with error notification
-   * 
+   *
    * @param url - URL template with {id} placeholder
    * @param id - Resource ID
    * @param data - Resource data
@@ -391,7 +396,7 @@ class ApiService {
   public async updateWithNotification<T>(
     url: string,
     id: string | number,
-    data: any,
+    data: unknown,
     config?: AxiosRequestConfig
   ): Promise<T> {
     const fullUrl = formatUrl(url, { id });
@@ -400,7 +405,7 @@ class ApiService {
 
   /**
    * Partially update a resource
-   * 
+   *
    * @param url - URL template with {id} placeholder
    * @param id - Resource ID
    * @param data - Partial resource data
@@ -410,7 +415,7 @@ class ApiService {
   public async partialUpdate<T>(
     url: string,
     id: string | number,
-    data: any,
+    data: unknown,
     config?: AxiosRequestConfig
   ): Promise<T> {
     const fullUrl = formatUrl(url, { id });
@@ -419,7 +424,7 @@ class ApiService {
 
   /**
    * Partially update a resource with error notification
-   * 
+   *
    * @param url - URL template with {id} placeholder
    * @param id - Resource ID
    * @param data - Partial resource data
@@ -429,7 +434,7 @@ class ApiService {
   public async partialUpdateWithNotification<T>(
     url: string,
     id: string | number,
-    data: any,
+    data: unknown,
     config?: AxiosRequestConfig
   ): Promise<T> {
     const fullUrl = formatUrl(url, { id });
@@ -438,7 +443,7 @@ class ApiService {
 
   /**
    * Delete a resource
-   * 
+   *
    * @param url - URL template with {id} placeholder
    * @param id - Resource ID
    * @param config - Additional Axios request configuration
@@ -455,7 +460,7 @@ class ApiService {
 
   /**
    * Delete a resource with error notification
-   * 
+   *
    * @param url - URL template with {id} placeholder
    * @param id - Resource ID
    * @param config - Additional Axios request configuration

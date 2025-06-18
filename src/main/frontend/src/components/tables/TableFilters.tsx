@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Input } from '../ui/input';
 import { Button } from '../ui/button';
-import { SelectInput, SelectOption } from '../forms/SelectInput';
+import SelectInput, { type SelectOption } from '../forms/SelectInput';
 import { Search, X, Filter } from 'lucide-react';
 
 export interface FilterConfig {
@@ -14,7 +14,7 @@ export interface FilterConfig {
 
 export interface FilterValue {
   key: string;
-  value: any;
+  value: unknown;
   operator?: 'equals' | 'contains' | 'startsWith' | 'endsWith' | 'gt' | 'lt' | 'gte' | 'lte';
 }
 
@@ -41,11 +41,11 @@ const TableFilters: React.FC<TableFiltersProps> = ({
   className = '',
 }) => {
   const [searchValue, setSearchValue] = useState('');
-  const [filterValues, setFilterValues] = useState<Record<string, any>>({});
+  const [filterValues, setFilterValues] = useState<Record<string, unknown>>({});
 
   // Initialize filter values from props
   useEffect(() => {
-    const initialValues: Record<string, any> = {};
+    const initialValues: Record<string, unknown> = {};
     values.forEach(filter => {
       initialValues[filter.key] = filter.value;
     });
@@ -54,7 +54,7 @@ const TableFilters: React.FC<TableFiltersProps> = ({
     // Set search value if it exists
     const searchFilter = values.find(f => f.key === 'search');
     if (searchFilter) {
-      setSearchValue(searchFilter.value || '');
+      setSearchValue(String(searchFilter.value || ''));
     }
   }, [values]);
 
@@ -63,29 +63,29 @@ const TableFilters: React.FC<TableFiltersProps> = ({
     updateFilters('search', value);
   };
 
-  const handleFilterChange = (key: string, value: any) => {
+  const handleFilterChange = (key: string, value: unknown) => {
     const newFilterValues = { ...filterValues, [key]: value };
     setFilterValues(newFilterValues);
     updateFilters(key, value);
   };
 
-  const updateFilters = (key: string, value: any) => {
+  const updateFilters = (key: string, value: unknown) => {
     const newFilters = values.filter(f => f.key !== key);
-    
+
     if (value !== '' && value !== null && value !== undefined) {
       const operator = getDefaultOperator(key);
       newFilters.push({ key, value, operator });
     }
-    
+
     onFiltersChange(newFilters);
   };
 
   const getDefaultOperator = (key: string): FilterValue['operator'] => {
     if (key === 'search') return 'contains';
-    
+
     const filter = filters.find(f => f.key === key);
     if (!filter) return 'equals';
-    
+
     switch (filter.type) {
       case 'text':
         return 'contains';
@@ -117,8 +117,8 @@ const TableFilters: React.FC<TableFiltersProps> = ({
           <Input
             key={filter.key}
             placeholder={filter.placeholder || filter.label}
-            value={value}
-            onChange={(e) => handleFilterChange(filter.key, e.target.value)}
+            value={String(value)}
+            onChange={e => handleFilterChange(filter.key, e.target.value)}
             className="w-48"
           />
         );
@@ -127,8 +127,8 @@ const TableFilters: React.FC<TableFiltersProps> = ({
         return (
           <SelectInput
             key={filter.key}
-            value={value}
-            onChange={(newValue) => handleFilterChange(filter.key, newValue)}
+            value={String(value)}
+            onChange={newValue => handleFilterChange(filter.key, newValue)}
             options={filter.options || []}
             placeholder={filter.placeholder || `Select ${filter.label}`}
             allowClear
@@ -142,8 +142,8 @@ const TableFilters: React.FC<TableFiltersProps> = ({
             key={filter.key}
             type="number"
             placeholder={filter.placeholder || filter.label}
-            value={value}
-            onChange={(e) => handleFilterChange(filter.key, e.target.value)}
+            value={String(value)}
+            onChange={e => handleFilterChange(filter.key, e.target.value)}
             className="w-32"
           />
         );
@@ -154,8 +154,8 @@ const TableFilters: React.FC<TableFiltersProps> = ({
             key={filter.key}
             type="date"
             placeholder={filter.placeholder || filter.label}
-            value={value}
-            onChange={(e) => handleFilterChange(filter.key, e.target.value)}
+            value={String(value)}
+            onChange={e => handleFilterChange(filter.key, e.target.value)}
             className="w-40"
           />
         );
@@ -174,17 +174,15 @@ const TableFilters: React.FC<TableFiltersProps> = ({
             <Input
               placeholder={searchPlaceholder}
               value={searchValue}
-              onChange={(e) => handleSearchChange(e.target.value)}
+              onChange={e => handleSearchChange(e.target.value)}
               className="pl-10"
             />
           </div>
         )}
 
-        {filters.map((filter) => (
+        {filters.map(filter => (
           <div key={filter.key} className="flex flex-col space-y-1">
-            <label className="text-sm font-medium text-gray-700">
-              {filter.label}
-            </label>
+            <label className="text-sm font-medium text-gray-700">{filter.label}</label>
             {renderFilter(filter)}
           </div>
         ))}
@@ -206,15 +204,16 @@ const TableFilters: React.FC<TableFiltersProps> = ({
         <div className="flex flex-wrap items-center gap-2">
           <Filter className="h-4 w-4 text-gray-500" />
           <span className="text-sm text-gray-500">Active filters:</span>
-          {values.map((filter) => (
+          {values.map(filter => (
             <div
               key={filter.key}
               className="flex items-center gap-1 bg-blue-100 text-blue-800 px-2 py-1 rounded-md text-sm"
             >
               <span>
-                {filter.key === 'search' ? 'Search' : 
-                 filters.find(f => f.key === filter.key)?.label || filter.key}
-                : {filter.value}
+                {filter.key === 'search'
+                  ? 'Search'
+                  : filters.find(f => f.key === filter.key)?.label || filter.key}
+                : {String(filter.value)}
               </span>
               <button
                 onClick={() => updateFilters(filter.key, '')}

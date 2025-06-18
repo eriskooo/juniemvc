@@ -1,15 +1,16 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { PageContainer, PageHeader, PageContent } from '@components/layout';
 import { FormWrapper, FormField, FormActions } from '@components/forms';
-import { Input, Label } from '@components/ui';
+import { Input } from '@components/ui';
 import { Button } from '@components/ui';
-import { useForm, useToast } from '@hooks';
-import { beerOrderService } from '../../services/beerOrderService';
+import { useForm, useToast } from '../../hooks';
+import { validationRules } from '../../utils/validation';
+import beerOrderService from '../../services/beerOrderService';
 import type { BeerOrderShipmentDto } from '../../types/beerOrder';
 
-interface ShipmentFormData {
+interface ShipmentFormData extends Record<string, unknown> {
   shipmentDate: string;
   carrier: string;
   trackingNumber: string;
@@ -30,36 +31,30 @@ const BeerOrderShipmentCreatePage: React.FC = () => {
     trackingNumber: '',
   };
 
-  const {
-    values,
-    errors,
-    isValid,
-    isSubmitting,
-    setValue,
-    handleSubmit,
-  } = useForm({
+  const { values, errors, isValid, isSubmitting, setValue, handleSubmit } = useForm({
     initialValues,
     validationRules: {
-      shipmentDate: [
-        { required: true, message: 'Shipment date is required' },
-      ],
+      shipmentDate: [validationRules.required('Shipment date is required')],
       carrier: [
-        { required: true, message: 'Carrier is required' },
-        { minLength: 2, message: 'Carrier must be at least 2 characters' },
+        validationRules.required('Carrier is required'),
+        validationRules.minLength(2, 'Carrier must be at least 2 characters'),
       ],
       trackingNumber: [
-        { required: true, message: 'Tracking number is required' },
-        { minLength: 3, message: 'Tracking number must be at least 3 characters' },
+        validationRules.required('Tracking number is required'),
+        validationRules.minLength(3, 'Tracking number must be at least 3 characters'),
       ],
     },
-    onSubmit: async (formData) => {
+    onSubmit: async (formData: ShipmentFormData) => {
       if (!orderId) {
         error('Order ID is missing');
         return;
       }
 
       try {
-        const shipmentData: Omit<BeerOrderShipmentDto, 'id' | 'version' | 'createdDate' | 'updateDate'> = {
+        const shipmentData: Omit<
+          BeerOrderShipmentDto,
+          'id' | 'version' | 'createdDate' | 'updateDate'
+        > = {
           shipmentDate: formData.shipmentDate,
           carrier: formData.carrier,
           trackingNumber: formData.trackingNumber,
@@ -80,15 +75,7 @@ const BeerOrderShipmentCreatePage: React.FC = () => {
   };
 
   // Common carrier options
-  const carrierOptions = [
-    'FedEx',
-    'UPS',
-    'USPS',
-    'DHL',
-    'Amazon Logistics',
-    'OnTrac',
-    'Other'
-  ];
+  const carrierOptions = ['FedEx', 'UPS', 'USPS', 'DHL', 'Amazon Logistics', 'OnTrac', 'Other'];
 
   return (
     <PageContainer>
@@ -117,27 +104,22 @@ const BeerOrderShipmentCreatePage: React.FC = () => {
                 id="shipmentDate"
                 type="datetime-local"
                 value={values.shipmentDate}
-                onChange={(e) => setValue('shipmentDate', e.target.value)}
+                onChange={e => setValue('shipmentDate', e.target.value)}
               />
             </FormField>
 
             {/* Carrier */}
-            <FormField
-              label="Carrier"
-              required
-              error={errors.carrier?.[0]}
-              htmlFor="carrier"
-            >
+            <FormField label="Carrier" required error={errors.carrier?.[0]} htmlFor="carrier">
               <div className="space-y-2">
                 <Input
                   id="carrier"
                   placeholder="Enter carrier name"
                   value={values.carrier}
-                  onChange={(e) => setValue('carrier', e.target.value)}
+                  onChange={e => setValue('carrier', e.target.value)}
                   list="carrier-options"
                 />
                 <datalist id="carrier-options">
-                  {carrierOptions.map((carrier) => (
+                  {carrierOptions.map(carrier => (
                     <option key={carrier} value={carrier} />
                   ))}
                 </datalist>
@@ -156,7 +138,7 @@ const BeerOrderShipmentCreatePage: React.FC = () => {
                 id="trackingNumber"
                 placeholder="Enter tracking number"
                 value={values.trackingNumber}
-                onChange={(e) => setValue('trackingNumber', e.target.value)}
+                onChange={e => setValue('trackingNumber', e.target.value)}
               />
             </FormField>
           </div>

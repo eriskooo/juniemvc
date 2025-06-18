@@ -4,7 +4,7 @@
  */
 
 export interface ValidationRule {
-  validate: (value: any) => boolean;
+  validate: (value: unknown) => boolean;
   message: string;
 }
 
@@ -16,15 +16,15 @@ export interface ValidationResult {
 /**
  * Validates a single field against multiple rules
  */
-export const validateField = (value: any, rules: ValidationRule[]): ValidationResult => {
+export const validateField = (value: unknown, rules: ValidationRule[]): ValidationResult => {
   const errors: string[] = [];
-  
+
   for (const rule of rules) {
     if (!rule.validate(value)) {
       errors.push(rule.message);
     }
   }
-  
+
   return {
     isValid: errors.length === 0,
     errors,
@@ -35,15 +35,15 @@ export const validateField = (value: any, rules: ValidationRule[]): ValidationRe
  * Validates multiple fields
  */
 export const validateForm = (
-  data: Record<string, any>,
+  data: Record<string, unknown>,
   rules: Record<string, ValidationRule[]>
 ): Record<string, ValidationResult> => {
   const results: Record<string, ValidationResult> = {};
-  
+
   for (const [field, fieldRules] of Object.entries(rules)) {
     results[field] = validateField(data[field], fieldRules);
   }
-  
+
   return results;
 };
 
@@ -59,56 +59,57 @@ export const isFormValid = (results: Record<string, ValidationResult>): boolean 
  */
 export const validationRules = {
   required: (message = 'This field is required'): ValidationRule => ({
-    validate: (value) => value !== null && value !== undefined && value !== '',
+    validate: value => value !== null && value !== undefined && value !== '',
     message,
   }),
 
   minLength: (min: number, message?: string): ValidationRule => ({
-    validate: (value) => !value || value.length >= min,
+    validate: value => !value || (typeof value === 'string' && value.length >= min),
     message: message || `Must be at least ${min} characters`,
   }),
 
   maxLength: (max: number, message?: string): ValidationRule => ({
-    validate: (value) => !value || value.length <= max,
+    validate: value => !value || (typeof value === 'string' && value.length <= max),
     message: message || `Must be no more than ${max} characters`,
   }),
 
   email: (message = 'Must be a valid email address'): ValidationRule => ({
-    validate: (value) => !value || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value),
+    validate: value =>
+      !value || (typeof value === 'string' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)),
     message,
   }),
 
   number: (message = 'Must be a valid number'): ValidationRule => ({
-    validate: (value) => !value || !isNaN(Number(value)),
+    validate: value => !value || !isNaN(Number(value)),
     message,
   }),
 
   positiveNumber: (message = 'Must be a positive number'): ValidationRule => ({
-    validate: (value) => !value || (!isNaN(Number(value)) && Number(value) > 0),
+    validate: value => !value || (!isNaN(Number(value)) && Number(value) > 0),
     message,
   }),
 
   integer: (message = 'Must be a whole number'): ValidationRule => ({
-    validate: (value) => !value || (Number.isInteger(Number(value))),
+    validate: value => !value || Number.isInteger(Number(value)),
     message,
   }),
 
   min: (min: number, message?: string): ValidationRule => ({
-    validate: (value) => !value || Number(value) >= min,
+    validate: value => !value || Number(value) >= min,
     message: message || `Must be at least ${min}`,
   }),
 
   max: (max: number, message?: string): ValidationRule => ({
-    validate: (value) => !value || Number(value) <= max,
+    validate: value => !value || Number(value) <= max,
     message: message || `Must be no more than ${max}`,
   }),
 
   pattern: (regex: RegExp, message = 'Invalid format'): ValidationRule => ({
-    validate: (value) => !value || regex.test(value),
+    validate: value => !value || (typeof value === 'string' && regex.test(value)),
     message,
   }),
 
-  custom: (validator: (value: any) => boolean, message: string): ValidationRule => ({
+  custom: (validator: (value: unknown) => boolean, message: string): ValidationRule => ({
     validate: validator,
     message,
   }),
@@ -123,16 +124,14 @@ export const beerValidationRules = {
     validationRules.minLength(2, 'Beer name must be at least 2 characters'),
     validationRules.maxLength(100, 'Beer name must be no more than 100 characters'),
   ],
-  
-  beerStyle: [
-    validationRules.required('Beer style is required'),
-  ],
-  
+
+  beerStyle: [validationRules.required('Beer style is required')],
+
   price: [
     validationRules.required('Price is required'),
     validationRules.positiveNumber('Price must be a positive number'),
   ],
-  
+
   quantityOnHand: [
     validationRules.integer('Quantity must be a whole number'),
     validationRules.min(0, 'Quantity cannot be negative'),
@@ -148,8 +147,6 @@ export const customerValidationRules = {
     validationRules.minLength(2, 'Customer name must be at least 2 characters'),
     validationRules.maxLength(100, 'Customer name must be no more than 100 characters'),
   ],
-  
-  email: [
-    validationRules.email('Must be a valid email address'),
-  ],
+
+  email: [validationRules.email('Must be a valid email address')],
 };

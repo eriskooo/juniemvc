@@ -1,13 +1,13 @@
 /**
  * Customer Service
- * 
+ *
  * Service for managing customer-related operations
  */
 
-import { AxiosRequestConfig } from 'axios';
+import type { AxiosRequestConfig } from 'axios';
 import apiService from './api';
-import { CustomerDto, CustomerPatchDto, PageOfCustomerDto } from '@types/customer';
-import { PaginationParams, SortParams, FilterParam } from '@utils/apiUtils';
+import type { CustomerDto, PageOfCustomerDto } from '../types/customer';
+import type { PaginationParams, SortParams, FilterParam } from '@utils/apiUtils';
 
 // API endpoints
 const CUSTOMER_API_URL = '/api/v1/customers';
@@ -20,24 +20,19 @@ const CUSTOMER_BY_ID_URL = '/api/v1/customers/{id}';
 class CustomerService {
   /**
    * Get all customers
-   * 
+   *
    * @param config - Additional Axios request configuration
    * @returns Promise with the list of customers
    */
-  public async getCustomers(
-    config?: AxiosRequestConfig
-  ): Promise<CustomerDto[]> {
-    return apiService.getWithNotification<CustomerDto[]>(
-      CUSTOMER_API_URL,
-      config
-    );
+  public async getCustomers(config?: AxiosRequestConfig): Promise<CustomerDto[]> {
+    return apiService.getWithNotification<CustomerDto[]>(CUSTOMER_API_URL, config);
   }
 
   /**
    * Get a paginated list of customers
    * Note: The API doesn't natively support pagination for customers,
    * so we implement client-side pagination
-   * 
+   *
    * @param pagination - Pagination parameters
    * @param sort - Sorting parameters
    * @param filters - Filter parameters
@@ -52,25 +47,25 @@ class CustomerService {
   ): Promise<PageOfCustomerDto> {
     // Get all customers
     const customers = await this.getCustomers(config);
-    
+
     // Apply filters if provided
     let filteredCustomers = customers;
     if (filters && filters.length > 0) {
       filteredCustomers = this.applyFilters(customers, filters);
     }
-    
+
     // Apply sorting if provided
     if (sort && sort.sort) {
       this.applySorting(filteredCustomers, sort);
     }
-    
+
     // Apply pagination if provided
     const page = pagination?.page || 0;
     const size = pagination?.size || 20;
     const start = page * size;
     const end = start + size;
     const paginatedCustomers = filteredCustomers.slice(start, end);
-    
+
     // Create a paginated response
     return {
       content: paginatedCustomers,
@@ -78,13 +73,13 @@ class CustomerService {
         sort: {
           sorted: !!sort?.sort,
           unsorted: !sort?.sort,
-          empty: !sort?.sort
+          empty: !sort?.sort,
         },
         offset: start,
         pageNumber: page,
         pageSize: size,
         paged: true,
-        unpaged: false
+        unpaged: false,
       },
       totalPages: Math.ceil(filteredCustomers.length / size),
       totalElements: filteredCustomers.length,
@@ -94,46 +89,43 @@ class CustomerService {
       sort: {
         sorted: !!sort?.sort,
         unsorted: !sort?.sort,
-        empty: !sort?.sort
+        empty: !sort?.sort,
       },
       numberOfElements: paginatedCustomers.length,
       first: page === 0,
-      empty: paginatedCustomers.length === 0
+      empty: paginatedCustomers.length === 0,
     };
   }
 
   /**
    * Apply filters to customers
-   * 
+   *
    * @param customers - List of customers
    * @param filters - Filter parameters
    * @returns Filtered list of customers
    */
-  private applyFilters(
-    customers: CustomerDto[],
-    filters: FilterParam[]
-  ): CustomerDto[] {
+  private applyFilters(customers: CustomerDto[], filters: FilterParam[]): CustomerDto[] {
     return customers.filter(customer => {
       return filters.every(filter => {
         const field = filter.field;
         const value = filter.value;
-        
+
         if (field === 'name' && typeof value === 'string') {
           return customer.name.toLowerCase().includes(value.toLowerCase());
         }
-        
+
         if (field === 'email' && typeof value === 'string') {
           return customer.email?.toLowerCase().includes(value.toLowerCase());
         }
-        
+
         if (field === 'city' && typeof value === 'string') {
           return customer.city.toLowerCase().includes(value.toLowerCase());
         }
-        
+
         if (field === 'state' && typeof value === 'string') {
           return customer.state.toLowerCase() === value.toLowerCase();
         }
-        
+
         return true;
       });
     });
@@ -141,23 +133,20 @@ class CustomerService {
 
   /**
    * Apply sorting to customers
-   * 
+   *
    * @param customers - List of customers
    * @param sort - Sorting parameters
    */
-  private applySorting(
-    customers: CustomerDto[],
-    sort: SortParams
-  ): void {
+  private applySorting(customers: CustomerDto[], sort: SortParams): void {
     const field = sort.sort;
     const direction = sort.direction || 'asc';
-    
+
     if (!field) return;
-    
+
     customers.sort((a, b) => {
-      let valueA: any;
-      let valueB: any;
-      
+      let valueA: string;
+      let valueB: string;
+
       switch (field) {
         case 'name':
           valueA = a.name;
@@ -178,34 +167,29 @@ class CustomerService {
         default:
           return 0;
       }
-      
+
       if (typeof valueA === 'string' && typeof valueB === 'string') {
-        return direction === 'asc'
-          ? valueA.localeCompare(valueB)
-          : valueB.localeCompare(valueA);
+        return direction === 'asc' ? valueA.localeCompare(valueB) : valueB.localeCompare(valueA);
       }
-      
+
       return 0;
     });
   }
 
   /**
    * Get a customer by ID
-   * 
+   *
    * @param id - Customer ID
    * @param config - Additional Axios request configuration
    * @returns Promise with the customer
    */
-  public async getCustomerById(
-    id: number,
-    config?: AxiosRequestConfig
-  ): Promise<CustomerDto> {
+  public async getCustomerById(id: number, config?: AxiosRequestConfig): Promise<CustomerDto> {
     return apiService.getByIdWithNotification<CustomerDto>(CUSTOMER_BY_ID_URL, id, config);
   }
 
   /**
    * Create a new customer
-   * 
+   *
    * @param customer - Customer data
    * @param config - Additional Axios request configuration
    * @returns Promise with the created customer
@@ -219,7 +203,7 @@ class CustomerService {
 
   /**
    * Update a customer
-   * 
+   *
    * @param id - Customer ID
    * @param customer - Updated customer data
    * @param config - Additional Axios request configuration
@@ -235,15 +219,12 @@ class CustomerService {
 
   /**
    * Delete a customer
-   * 
+   *
    * @param id - Customer ID
    * @param config - Additional Axios request configuration
    * @returns Promise with the response
    */
-  public async deleteCustomer(
-    id: number,
-    config?: AxiosRequestConfig
-  ): Promise<void> {
+  public async deleteCustomer(id: number, config?: AxiosRequestConfig): Promise<void> {
     return apiService.deleteResourceWithNotification<void>(CUSTOMER_BY_ID_URL, id, config);
   }
 }

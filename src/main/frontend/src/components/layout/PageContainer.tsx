@@ -1,4 +1,4 @@
-import React, { ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import Breadcrumb from '../navigation/Breadcrumb';
 
 interface PageContainerProps {
@@ -11,11 +11,7 @@ interface PageContainerProps {
  * Page container component that provides consistent layout for pages
  * Includes optional breadcrumb navigation and consistent spacing
  */
-const PageContainer: React.FC<PageContainerProps> = ({ 
-  children, 
-  className = '', 
-  showBreadcrumb = true 
-}) => {
+const PageContainer = ({ children, className = '', showBreadcrumb = true }: PageContainerProps) => {
   return (
     <div className={`max-w-7xl mx-auto ${className}`}>
       {showBreadcrumb && <Breadcrumb />}

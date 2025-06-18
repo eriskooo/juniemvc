@@ -1,18 +1,18 @@
 /**
  * Beer Order Service
- * 
+ *
  * Service for managing beer order-related operations
  */
 
-import { AxiosRequestConfig } from 'axios';
+import type { AxiosRequestConfig } from 'axios';
 import apiService from './api';
-import { 
-  BeerOrderDto, 
-  BeerOrderPatchDto, 
-  BeerOrderShipmentDto, 
-  PageOfBeerOrderDto 
-} from '@types/beerOrder';
-import { PaginationParams, SortParams, FilterParam } from '@utils/apiUtils';
+import type {
+  BeerOrderDto,
+  BeerOrderPatchDto,
+  BeerOrderShipmentDto,
+  PageOfBeerOrderDto,
+} from '../types/beerOrder';
+import type { PaginationParams, SortParams, FilterParam } from '@utils/apiUtils';
 
 // API endpoints
 const BEER_ORDER_API_URL = '/api/v1/beer-orders';
@@ -27,24 +27,19 @@ const BEER_ORDER_SHIPMENT_BY_ID_URL = '/api/v1/beer-orders/{beerOrderId}/shipmen
 class BeerOrderService {
   /**
    * Get all beer orders
-   * 
+   *
    * @param config - Additional Axios request configuration
    * @returns Promise with the list of beer orders
    */
-  public async getBeerOrders(
-    config?: AxiosRequestConfig
-  ): Promise<BeerOrderDto[]> {
-    return apiService.getWithNotification<BeerOrderDto[]>(
-      BEER_ORDER_API_URL,
-      config
-    );
+  public async getBeerOrders(config?: AxiosRequestConfig): Promise<BeerOrderDto[]> {
+    return apiService.getWithNotification<BeerOrderDto[]>(BEER_ORDER_API_URL, config);
   }
 
   /**
    * Get a paginated list of beer orders
    * Note: The API doesn't natively support pagination for beer orders,
    * so we implement client-side pagination
-   * 
+   *
    * @param pagination - Pagination parameters
    * @param sort - Sorting parameters
    * @param filters - Filter parameters
@@ -59,25 +54,25 @@ class BeerOrderService {
   ): Promise<PageOfBeerOrderDto> {
     // Get all beer orders
     const beerOrders = await this.getBeerOrders(config);
-    
+
     // Apply filters if provided
     let filteredBeerOrders = beerOrders;
     if (filters && filters.length > 0) {
       filteredBeerOrders = this.applyFilters(beerOrders, filters);
     }
-    
+
     // Apply sorting if provided
     if (sort && sort.sort) {
       this.applySorting(filteredBeerOrders, sort);
     }
-    
+
     // Apply pagination if provided
     const page = pagination?.page || 0;
     const size = pagination?.size || 20;
     const start = page * size;
     const end = start + size;
     const paginatedBeerOrders = filteredBeerOrders.slice(start, end);
-    
+
     // Create a paginated response
     return {
       content: paginatedBeerOrders,
@@ -85,13 +80,13 @@ class BeerOrderService {
         sort: {
           sorted: !!sort?.sort,
           unsorted: !sort?.sort,
-          empty: !sort?.sort
+          empty: !sort?.sort,
         },
         offset: start,
         pageNumber: page,
         pageSize: size,
         paged: true,
-        unpaged: false
+        unpaged: false,
       },
       totalPages: Math.ceil(filteredBeerOrders.length / size),
       totalElements: filteredBeerOrders.length,
@@ -101,38 +96,35 @@ class BeerOrderService {
       sort: {
         sorted: !!sort?.sort,
         unsorted: !sort?.sort,
-        empty: !sort?.sort
+        empty: !sort?.sort,
       },
       numberOfElements: paginatedBeerOrders.length,
       first: page === 0,
-      empty: paginatedBeerOrders.length === 0
+      empty: paginatedBeerOrders.length === 0,
     };
   }
 
   /**
    * Apply filters to beer orders
-   * 
+   *
    * @param beerOrders - List of beer orders
    * @param filters - Filter parameters
    * @returns Filtered list of beer orders
    */
-  private applyFilters(
-    beerOrders: BeerOrderDto[],
-    filters: FilterParam[]
-  ): BeerOrderDto[] {
+  private applyFilters(beerOrders: BeerOrderDto[], filters: FilterParam[]): BeerOrderDto[] {
     return beerOrders.filter(beerOrder => {
       return filters.every(filter => {
         const field = filter.field;
         const value = filter.value;
-        
+
         if (field === 'customerRef' && typeof value === 'string') {
           return beerOrder.customerRef?.toLowerCase().includes(value.toLowerCase());
         }
-        
+
         if (field === 'status' && typeof value === 'string') {
           return beerOrder.status?.toLowerCase() === value.toLowerCase();
         }
-        
+
         return true;
       });
     });
@@ -140,23 +132,20 @@ class BeerOrderService {
 
   /**
    * Apply sorting to beer orders
-   * 
+   *
    * @param beerOrders - List of beer orders
    * @param sort - Sorting parameters
    */
-  private applySorting(
-    beerOrders: BeerOrderDto[],
-    sort: SortParams
-  ): void {
+  private applySorting(beerOrders: BeerOrderDto[], sort: SortParams): void {
     const field = sort.sort;
     const direction = sort.direction || 'asc';
-    
+
     if (!field) return;
-    
+
     beerOrders.sort((a, b) => {
-      let valueA: any;
-      let valueB: any;
-      
+      let valueA: string | number;
+      let valueB: string | number;
+
       switch (field) {
         case 'id':
           valueA = a.id || 0;
@@ -181,40 +170,33 @@ class BeerOrderService {
         default:
           return 0;
       }
-      
+
       if (typeof valueA === 'string' && typeof valueB === 'string') {
-        return direction === 'asc'
-          ? valueA.localeCompare(valueB)
-          : valueB.localeCompare(valueA);
+        return direction === 'asc' ? valueA.localeCompare(valueB) : valueB.localeCompare(valueA);
       }
-      
+
       if (typeof valueA === 'number' && typeof valueB === 'number') {
-        return direction === 'asc'
-          ? valueA - valueB
-          : valueB - valueA;
+        return direction === 'asc' ? valueA - valueB : valueB - valueA;
       }
-      
+
       return 0;
     });
   }
 
   /**
    * Get a beer order by ID
-   * 
+   *
    * @param id - Beer order ID
    * @param config - Additional Axios request configuration
    * @returns Promise with the beer order
    */
-  public async getBeerOrderById(
-    id: number,
-    config?: AxiosRequestConfig
-  ): Promise<BeerOrderDto> {
+  public async getBeerOrderById(id: number, config?: AxiosRequestConfig): Promise<BeerOrderDto> {
     return apiService.getByIdWithNotification<BeerOrderDto>(BEER_ORDER_BY_ID_URL, id, config);
   }
 
   /**
    * Create a new beer order
-   * 
+   *
    * @param beerOrder - Beer order data
    * @param config - Additional Axios request configuration
    * @returns Promise with the created beer order
@@ -228,7 +210,7 @@ class BeerOrderService {
 
   /**
    * Update a beer order
-   * 
+   *
    * @param id - Beer order ID
    * @param beerOrder - Updated beer order data
    * @param config - Additional Axios request configuration
@@ -239,26 +221,28 @@ class BeerOrderService {
     beerOrder: BeerOrderDto,
     config?: AxiosRequestConfig
   ): Promise<BeerOrderDto> {
-    return apiService.updateWithNotification<BeerOrderDto>(BEER_ORDER_BY_ID_URL, id, beerOrder, config);
+    return apiService.updateWithNotification<BeerOrderDto>(
+      BEER_ORDER_BY_ID_URL,
+      id,
+      beerOrder,
+      config
+    );
   }
 
   /**
    * Delete a beer order
-   * 
+   *
    * @param id - Beer order ID
    * @param config - Additional Axios request configuration
    * @returns Promise with the response
    */
-  public async deleteBeerOrder(
-    id: number,
-    config?: AxiosRequestConfig
-  ): Promise<void> {
+  public async deleteBeerOrder(id: number, config?: AxiosRequestConfig): Promise<void> {
     return apiService.deleteResourceWithNotification<void>(BEER_ORDER_BY_ID_URL, id, config);
   }
 
   /**
    * Update beer order status
-   * 
+   *
    * @param id - Beer order ID
    * @param status - New status
    * @param config - Additional Axios request configuration
@@ -270,14 +254,19 @@ class BeerOrderService {
     config?: AxiosRequestConfig
   ): Promise<BeerOrderDto> {
     const beerOrderPatch: BeerOrderPatchDto = {
-      status
+      status,
     };
-    return apiService.partialUpdateWithNotification<BeerOrderDto>(BEER_ORDER_BY_ID_URL, id, beerOrderPatch, config);
+    return apiService.partialUpdateWithNotification<BeerOrderDto>(
+      BEER_ORDER_BY_ID_URL,
+      id,
+      beerOrderPatch,
+      config
+    );
   }
 
   /**
    * Get all shipments for a beer order
-   * 
+   *
    * @param beerOrderId - Beer order ID
    * @param config - Additional Axios request configuration
    * @returns Promise with the list of shipments
@@ -292,7 +281,7 @@ class BeerOrderService {
 
   /**
    * Get a specific shipment for a beer order
-   * 
+   *
    * @param beerOrderId - Beer order ID
    * @param shipmentId - Shipment ID
    * @param config - Additional Axios request configuration
@@ -303,15 +292,16 @@ class BeerOrderService {
     shipmentId: number,
     config?: AxiosRequestConfig
   ): Promise<BeerOrderShipmentDto> {
-    const url = BEER_ORDER_SHIPMENT_BY_ID_URL
-      .replace('{beerOrderId}', beerOrderId.toString())
-      .replace('{shipmentId}', shipmentId.toString());
+    const url = BEER_ORDER_SHIPMENT_BY_ID_URL.replace(
+      '{beerOrderId}',
+      beerOrderId.toString()
+    ).replace('{shipmentId}', shipmentId.toString());
     return apiService.getWithNotification<BeerOrderShipmentDto>(url, config);
   }
 
   /**
    * Create a new shipment for a beer order
-   * 
+   *
    * @param beerOrderId - Beer order ID
    * @param shipment - Shipment data
    * @param config - Additional Axios request configuration
@@ -328,7 +318,7 @@ class BeerOrderService {
 
   /**
    * Update a shipment for a beer order
-   * 
+   *
    * @param beerOrderId - Beer order ID
    * @param shipmentId - Shipment ID
    * @param shipment - Updated shipment data
@@ -341,15 +331,21 @@ class BeerOrderService {
     shipment: BeerOrderShipmentDto,
     config?: AxiosRequestConfig
   ): Promise<BeerOrderShipmentDto> {
-    const url = BEER_ORDER_SHIPMENT_BY_ID_URL
-      .replace('{beerOrderId}', beerOrderId.toString())
-      .replace('{shipmentId}', shipmentId.toString());
-    return apiService.updateWithNotification<BeerOrderShipmentDto>(url, shipment, config);
+    const url = BEER_ORDER_SHIPMENT_BY_ID_URL.replace(
+      '{beerOrderId}',
+      beerOrderId.toString()
+    ).replace('{shipmentId}', shipmentId.toString());
+    return apiService.updateWithNotification<BeerOrderShipmentDto>(
+      url,
+      shipmentId,
+      shipment,
+      config
+    );
   }
 
   /**
    * Delete a shipment for a beer order
-   * 
+   *
    * @param beerOrderId - Beer order ID
    * @param shipmentId - Shipment ID
    * @param config - Additional Axios request configuration
@@ -360,9 +356,10 @@ class BeerOrderService {
     shipmentId: number,
     config?: AxiosRequestConfig
   ): Promise<void> {
-    const url = BEER_ORDER_SHIPMENT_BY_ID_URL
-      .replace('{beerOrderId}', beerOrderId.toString())
-      .replace('{shipmentId}', shipmentId.toString());
+    const url = BEER_ORDER_SHIPMENT_BY_ID_URL.replace(
+      '{beerOrderId}',
+      beerOrderId.toString()
+    ).replace('{shipmentId}', shipmentId.toString());
     return apiService.deleteWithNotification<void>(url, config);
   }
 }

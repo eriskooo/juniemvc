@@ -17,9 +17,9 @@ interface ImageUploadProps {
 const ImageUpload: React.FC<ImageUploadProps> = ({
   value,
   onChange,
-  placeholder = "Upload an image",
+  placeholder = 'Upload an image',
   disabled = false,
-  className = "",
+  className = '',
 }) => {
   const [preview, setPreview] = useState<string | undefined>(value);
   const [isDragOver, setIsDragOver] = useState(false);
@@ -28,7 +28,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
   const handleFileSelect = (file: File) => {
     if (file && file.type.startsWith('image/')) {
       const reader = new FileReader();
-      reader.onload = (e) => {
+      reader.onload = e => {
         const result = e.target?.result as string;
         setPreview(result);
         onChange(result);
@@ -47,9 +47,9 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     setIsDragOver(false);
-    
+
     if (disabled) return;
-    
+
     const file = e.dataTransfer.files?.[0];
     if (file) {
       handleFileSelect(file);
@@ -92,15 +92,11 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
         className="hidden"
         disabled={disabled}
       />
-      
+
       {preview ? (
         <div className="relative">
           <div className="relative w-full h-48 rounded-lg border-2 border-dashed border-gray-300 overflow-hidden">
-            <img
-              src={preview}
-              alt="Preview"
-              className="w-full h-full object-cover"
-            />
+            <img src={preview} alt="Preview" className="w-full h-full object-cover" />
             {!disabled && (
               <Button
                 type="button"
@@ -118,10 +114,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
         <div
           className={`
             w-full h-48 rounded-lg border-2 border-dashed transition-colors cursor-pointer
-            ${isDragOver 
-              ? 'border-primary bg-primary/5' 
-              : 'border-gray-300 hover:border-gray-400'
-            }
+            ${isDragOver ? 'border-primary bg-primary/5' : 'border-gray-300 hover:border-gray-400'}
             ${disabled ? 'opacity-50 cursor-not-allowed' : ''}
           `}
           onDrop={handleDrop}

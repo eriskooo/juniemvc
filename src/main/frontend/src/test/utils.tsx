@@ -1,26 +1,37 @@
-import React, { ReactElement } from 'react';
-import { render, RenderOptions } from '@testing-library/react';
-import { BrowserRouter } from 'react-router-dom';
-import { AuthProvider } from '../contexts/AuthContext';
+import type { ReactElement } from 'react';
+import { render } from '@testing-library/react';
+import type { RenderOptions } from '@testing-library/react';
+import { AllTheProviders } from './TestProviders';
 
-// Custom render function that includes providers
-const AllTheProviders = ({ children }: { children: React.ReactNode }) => {
-  return (
-    <BrowserRouter>
-      <AuthProvider>
-        {children}
-      </AuthProvider>
-    </BrowserRouter>
-  );
-};
+const customRender = (ui: ReactElement, options?: Omit<RenderOptions, 'wrapper'>) =>
+  render(ui, { wrapper: AllTheProviders, ...options });
 
-const customRender = (
-  ui: ReactElement,
-  options?: Omit<RenderOptions, 'wrapper'>
-) => render(ui, { wrapper: AllTheProviders, ...options });
-
-// Re-export everything
-export * from '@testing-library/react';
+// Re-export commonly used testing utilities
+export {
+  screen,
+  fireEvent,
+  waitFor,
+  waitForElementToBeRemoved,
+  within,
+  getByRole,
+  getByText,
+  getByLabelText,
+  getByPlaceholderText,
+  getByTestId,
+  queryByRole,
+  queryByText,
+  queryByLabelText,
+  queryByPlaceholderText,
+  queryByTestId,
+  findByRole,
+  findByText,
+  findByLabelText,
+  findByPlaceholderText,
+  findByTestId,
+  act,
+  cleanup,
+  renderHook,
+} from '@testing-library/react';
 export { customRender as render };
 
 // Custom matchers and utilities
@@ -120,8 +131,11 @@ export function createMockPage<T>(content: T[], overrides = {}) {
 
 // Form testing utilities
 export const fillFormField = async (
-  getByLabelText: any,
-  userEvent: any,
+  getByLabelText: (text: string) => HTMLElement,
+  userEvent: {
+    clear: (element: HTMLElement) => Promise<void>;
+    type: (element: HTMLElement, text: string) => Promise<void>;
+  },
   label: string,
   value: string
 ) => {
@@ -131,8 +145,8 @@ export const fillFormField = async (
 };
 
 export const selectOption = async (
-  getByLabelText: any,
-  userEvent: any,
+  getByLabelText: (text: string) => HTMLElement,
+  userEvent: { click: (element: HTMLElement) => Promise<void> },
   label: string,
   option: string
 ) => {
@@ -140,13 +154,13 @@ export const selectOption = async (
   await userEvent.click(select);
   const optionElement = document.querySelector(`[value="${option}"]`);
   if (optionElement) {
-    await userEvent.click(optionElement);
+    await userEvent.click(optionElement as HTMLElement);
   }
 };
 
 // API response mocking utilities
 export function mockApiResponse<T>(data: T, delay = 0): Promise<T> {
-  return new Promise<T>((resolve) => {
+  return new Promise<T>(resolve => {
     setTimeout(() => resolve(data), delay);
   });
 }
@@ -154,8 +168,10 @@ export function mockApiResponse<T>(data: T, delay = 0): Promise<T> {
 export const mockApiError = (message = 'API Error', status = 500, delay = 0) => {
   return new Promise((_, reject) => {
     setTimeout(() => {
-      const error = new Error(message);
-      (error as any).response = { status, data: { message } };
+      const error = new Error(message) as Error & {
+        response: { status: number; data: { message: string } };
+      };
+      error.response = { status, data: { message } };
       reject(error);
     }, delay);
   });
@@ -168,32 +184,32 @@ export const checkAccessibility = async (container: HTMLElement) => {
   const buttons = container.querySelectorAll('button');
   const inputs = container.querySelectorAll('input, textarea, select');
   const images = container.querySelectorAll('img');
-  
+
   // Check that buttons have accessible names
   buttons.forEach(button => {
-    const hasAccessibleName = 
+    const hasAccessibleName =
       button.textContent?.trim() ||
       button.getAttribute('aria-label') ||
       button.getAttribute('aria-labelledby') ||
       button.getAttribute('title');
-    
+
     if (!hasAccessibleName) {
       console.warn('Button without accessible name found:', button);
     }
   });
-  
+
   // Check that form inputs have labels
   inputs.forEach(input => {
-    const hasLabel = 
+    const hasLabel =
       input.getAttribute('aria-label') ||
       input.getAttribute('aria-labelledby') ||
       document.querySelector(`label[for="${input.id}"]`);
-    
+
     if (!hasLabel) {
       console.warn('Input without label found:', input);
     }
   });
-  
+
   // Check that images have alt text
   images.forEach(img => {
     if (!img.getAttribute('alt')) {

@@ -1,4 +1,3 @@
-import React from 'react';
 import {
   Dialog,
   DialogContent,
@@ -90,23 +89,13 @@ const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <div className="flex items-center gap-3">
-            {displayIcon && (
-              <div className={variantStyles.iconColor}>
-                {displayIcon}
-              </div>
-            )}
+            {displayIcon && <div className={variantStyles.iconColor}>{displayIcon}</div>}
             <DialogTitle>{title}</DialogTitle>
           </div>
-          <DialogDescription className="text-left">
-            {description}
-          </DialogDescription>
+          <DialogDescription className="text-left">{description}</DialogDescription>
         </DialogHeader>
         <DialogFooter className="flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2">
-          <Button
-            variant="outline"
-            onClick={handleCancel}
-            disabled={isLoading}
-          >
+          <Button variant="outline" onClick={handleCancel} disabled={isLoading}>
             {cancelLabel}
           </Button>
           <Button

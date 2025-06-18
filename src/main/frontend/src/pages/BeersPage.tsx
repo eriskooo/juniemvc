@@ -1,11 +1,10 @@
-import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@components/ui';
 
 /**
  * Beers page component
  * Displays a list of beers and provides functionality to manage them
  */
-const BeersPage: React.FC = () => {
+const BeersPage = () => {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">

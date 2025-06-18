@@ -1,7 +1,16 @@
 import beerService from '../beerService';
 import apiService from '../api';
 import { createMockBeer, createMockPage } from '../../test/utils';
-import { BeerDto, BeerPatchDto } from '../../types/beer';
+import type { BeerDto, BeerPatchDto } from '../../types/beer';
+
+// Interface for API errors with response property
+interface ApiError extends Error {
+  response?: {
+    status: number;
+    data?: { message: string };
+  };
+  code?: string;
+}
 
 // Mock the API service
 jest.mock('../api');
@@ -19,18 +28,18 @@ describe('BeerService', () => {
         createMockBeer({ id: 2, beerName: 'Test Beer 2' }),
       ];
       const mockPage = createMockPage(mockBeers);
-      
+
       mockApiService.getPaginatedWithNotification.mockResolvedValue(mockPage);
 
       const result = await beerService.getBeers(
         { page: 0, size: 20 },
-        { sortBy: 'beerName', sortDirection: 'asc' }
+        { sort: 'beerName', direction: 'asc' }
       );
 
       expect(mockApiService.getPaginatedWithNotification).toHaveBeenCalledWith(
         '/api/v1/beers',
         { page: 0, size: 20 },
-        { sortBy: 'beerName', sortDirection: 'asc' },
+        { sort: 'beerName', direction: 'asc' },
         [],
         undefined
       );
@@ -40,7 +49,7 @@ describe('BeerService', () => {
     it('should fetch beers with name filter', async () => {
       const mockBeers = [createMockBeer({ beerName: 'IPA Beer' })];
       const mockPage = createMockPage(mockBeers);
-      
+
       mockApiService.getPaginatedWithNotification.mockResolvedValue(mockPage);
 
       await beerService.getBeers(undefined, undefined, 'IPA');
@@ -49,7 +58,7 @@ describe('BeerService', () => {
         '/api/v1/beers',
         undefined,
         undefined,
-        [{ name: 'beerName', value: 'IPA' }],
+        [{ field: 'beerName', value: 'IPA' }],
         undefined
       );
     });
@@ -57,7 +66,7 @@ describe('BeerService', () => {
     it('should fetch beers with style filter', async () => {
       const mockBeers = [createMockBeer({ beerStyle: 'IPA' })];
       const mockPage = createMockPage(mockBeers);
-      
+
       mockApiService.getPaginatedWithNotification.mockResolvedValue(mockPage);
 
       await beerService.getBeers(undefined, undefined, undefined, 'IPA');
@@ -66,7 +75,7 @@ describe('BeerService', () => {
         '/api/v1/beers',
         undefined,
         undefined,
-        [{ name: 'beerStyle', value: 'IPA' }],
+        [{ field: 'beerStyle', value: 'IPA' }],
         undefined
       );
     });
@@ -74,7 +83,7 @@ describe('BeerService', () => {
     it('should fetch beers with both name and style filters', async () => {
       const mockBeers = [createMockBeer({ beerName: 'Test IPA', beerStyle: 'IPA' })];
       const mockPage = createMockPage(mockBeers);
-      
+
       mockApiService.getPaginatedWithNotification.mockResolvedValue(mockPage);
 
       await beerService.getBeers(undefined, undefined, 'Test', 'IPA');
@@ -84,8 +93,8 @@ describe('BeerService', () => {
         undefined,
         undefined,
         [
-          { name: 'beerName', value: 'Test' },
-          { name: 'beerStyle', value: 'IPA' }
+          { field: 'beerName', value: 'Test' },
+          { field: 'beerStyle', value: 'IPA' },
         ],
         undefined
       );
@@ -115,8 +124,8 @@ describe('BeerService', () => {
     });
 
     it('should handle not found error', async () => {
-      const error = new Error('Beer not found');
-      (error as any).response = { status: 404 };
+      const error: ApiError = new Error('Beer not found');
+      error.response = { status: 404 };
       mockApiService.getByIdWithNotification.mockRejectedValue(error);
 
       await expect(beerService.getBeerById(999)).rejects.toThrow('Beer not found');
@@ -167,8 +176,8 @@ describe('BeerService', () => {
         quantityOnHand: 100,
         price: 12.99,
       };
-      const error = new Error('Validation failed');
-      (error as any).response = { status: 400, data: { message: 'Beer name is required' } };
+      const error: ApiError = new Error('Validation failed');
+      error.response = { status: 400, data: { message: 'Beer name is required' } };
       mockApiService.createWithNotification.mockRejectedValue(error);
 
       await expect(beerService.createBeer(invalidBeer)).rejects.toThrow('Validation failed');
@@ -200,8 +209,8 @@ describe('BeerService', () => {
 
     it('should handle update conflicts', async () => {
       const beer = createMockBeer({ id: 1, version: 1 });
-      const error = new Error('Conflict');
-      (error as any).response = { status: 409, data: { message: 'Version conflict' } };
+      const error: ApiError = new Error('Conflict');
+      error.response = { status: 409, data: { message: 'Version conflict' } };
       mockApiService.updateWithNotification.mockRejectedValue(error);
 
       await expect(beerService.updateBeer(1, beer)).rejects.toThrow('Conflict');
@@ -232,8 +241,8 @@ describe('BeerService', () => {
       const invalidPatch: BeerPatchDto = {
         price: -1, // Invalid negative price
       };
-      const error = new Error('Invalid price');
-      (error as any).response = { status: 400 };
+      const error: ApiError = new Error('Invalid price');
+      error.response = { status: 400 };
       mockApiService.partialUpdateWithNotification.mockRejectedValue(error);
 
       await expect(beerService.patchBeer(1, invalidPatch)).rejects.toThrow('Invalid price');
@@ -254,16 +263,16 @@ describe('BeerService', () => {
     });
 
     it('should handle delete errors', async () => {
-      const error = new Error('Cannot delete beer');
-      (error as any).response = { status: 409, data: { message: 'Beer has active orders' } };
+      const error: ApiError = new Error('Cannot delete beer');
+      error.response = { status: 409, data: { message: 'Beer has active orders' } };
       mockApiService.deleteResourceWithNotification.mockRejectedValue(error);
 
       await expect(beerService.deleteBeer(1)).rejects.toThrow('Cannot delete beer');
     });
 
     it('should handle not found on delete', async () => {
-      const error = new Error('Beer not found');
-      (error as any).response = { status: 404 };
+      const error: ApiError = new Error('Beer not found');
+      error.response = { status: 404 };
       mockApiService.deleteResourceWithNotification.mockRejectedValue(error);
 
       await expect(beerService.deleteBeer(999)).rejects.toThrow('Beer not found');
@@ -272,24 +281,24 @@ describe('BeerService', () => {
 
   describe('error handling', () => {
     it('should handle network errors', async () => {
-      const networkError = new Error('Network Error');
-      (networkError as any).code = 'NETWORK_ERROR';
+      const networkError: ApiError = new Error('Network Error');
+      networkError.code = 'NETWORK_ERROR';
       mockApiService.getPaginatedWithNotification.mockRejectedValue(networkError);
 
       await expect(beerService.getBeers()).rejects.toThrow('Network Error');
     });
 
     it('should handle timeout errors', async () => {
-      const timeoutError = new Error('Timeout');
-      (timeoutError as any).code = 'ECONNABORTED';
-      mockApiService.getBeerById.mockRejectedValue(timeoutError);
+      const timeoutError: ApiError = new Error('Timeout');
+      timeoutError.code = 'ECONNABORTED';
+      mockApiService.getByIdWithNotification.mockRejectedValue(timeoutError);
 
       await expect(beerService.getBeerById(1)).rejects.toThrow('Timeout');
     });
 
     it('should handle server errors', async () => {
-      const serverError = new Error('Internal Server Error');
-      (serverError as any).response = { status: 500 };
+      const serverError: ApiError = new Error('Internal Server Error');
+      serverError.response = { status: 500 };
       mockApiService.createWithNotification.mockRejectedValue(serverError);
 
       const beer = createMockBeer();
@@ -309,9 +318,9 @@ describe('BeerService', () => {
       expect(typeof beerService.deleteBeer).toBe('function');
     });
 
-    it('should be a singleton instance', () => {
+    it('should be a singleton instance', async () => {
       // Import the service again to test singleton behavior
-      const beerService2 = require('../beerService').default;
+      const { default: beerService2 } = await import('../beerService');
       expect(beerService).toBe(beerService2);
     });
   });

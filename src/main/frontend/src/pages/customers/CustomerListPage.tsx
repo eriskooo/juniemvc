@@ -1,13 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus } from 'lucide-react';
 import { PageContainer, PageHeader, PageContent } from '@components/layout';
 import { DataTable, TableFilters, TableActions, createCommonActions } from '@components/tables';
 import { Button } from '@components/ui';
-import { useToast, useConfirmationDialog } from '@hooks';
-import { customerService } from '../../services/customerService';
-import type { CustomerDto } from '../../api/models';
-import type { Column, FilterValue } from '@components/tables';
+import { useToast, useConfirmationDialog } from '../../hooks';
+import customerService from '../../services/customerService';
+import type { CustomerDto } from '../../api';
+import type { Column, FilterValue, SortConfig } from '@components/tables';
 
 /**
  * Customer listing page with pagination, filtering, and actions
@@ -15,7 +15,7 @@ import type { Column, FilterValue } from '@components/tables';
 const CustomerListPage: React.FC = () => {
   const navigate = useNavigate();
   const { success, error } = useToast();
-  const { dialogState, confirmDelete } = useConfirmationDialog();
+  const { confirmDelete } = useConfirmationDialog();
 
   const [customers, setCustomers] = useState<CustomerDto[]>([]);
   const [loading, setLoading] = useState(true);
@@ -25,25 +25,21 @@ const CustomerListPage: React.FC = () => {
     total: 0,
   });
   const [filters, setFilters] = useState<FilterValue[]>([]);
-  const [sortConfig, setSortConfig] = useState({ key: 'customerName', direction: 'asc' as const });
+  const [sortConfig, setSortConfig] = useState<SortConfig>({
+    key: 'customerName',
+    direction: 'asc',
+  });
 
   // Load customers data
-  const loadCustomers = async () => {
+  const loadCustomers = useCallback(async () => {
     setLoading(true);
     try {
-      // Extract filter values
-      const searchFilter = filters.find(f => f.key === 'search');
+      const response = await customerService.getCustomers();
 
-      const response = await customerService.getAllCustomers(
-        searchFilter?.value,
-        pagination.page - 1, // API uses 0-based pagination
-        pagination.pageSize
-      );
-
-      setCustomers(response.content || []);
+      setCustomers(response || []);
       setPagination(prev => ({
         ...prev,
-        total: response.totalElements || 0,
+        total: response?.length || 0,
       }));
     } catch (err) {
       error('Failed to load customers');
@@ -51,12 +47,12 @@ const CustomerListPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [error]);
 
   // Load data on component mount and when dependencies change
   useEffect(() => {
     loadCustomers();
-  }, [pagination.page, pagination.pageSize, filters, sortConfig]);
+  }, [loadCustomers]);
 
   // Handle page change
   const handlePageChange = (page: number) => {
@@ -76,10 +72,10 @@ const CustomerListPage: React.FC = () => {
 
   // Handle customer deletion
   const handleDeleteCustomer = async (customer: CustomerDto) => {
-    confirmDelete(customer.customerName || 'this customer', async () => {
+    confirmDelete(customer.name || 'this customer', async () => {
       try {
         await customerService.deleteCustomer(customer.id!);
-        success(`Customer "${customer.customerName}" deleted successfully`);
+        success(`Customer "${customer.name}" deleted successfully`);
         loadCustomers(); // Reload the list
       } catch (err) {
         error('Failed to delete customer');
@@ -100,7 +96,7 @@ const CustomerListPage: React.FC = () => {
             onClick={() => navigate(`/customers/${customer.id}`)}
             className="text-primary hover:underline"
           >
-            {value}
+            {String(value)}
           </button>
         </div>
       ),
@@ -109,31 +105,31 @@ const CustomerListPage: React.FC = () => {
       key: 'email',
       header: 'Email',
       sortable: true,
-      render: (value) => value || '-',
+      render: value => String(value || '-'),
     },
     {
       key: 'phone',
       header: 'Phone',
       sortable: false,
-      render: (value) => value || '-',
+      render: value => String(value || '-'),
     },
     {
       key: 'city',
       header: 'City',
       sortable: true,
-      render: (value) => value || '-',
+      render: value => String(value || '-'),
     },
     {
       key: 'state',
       header: 'State',
       sortable: true,
-      render: (value) => value || '-',
+      render: value => String(value || '-'),
     },
     {
       key: 'createdDate',
       header: 'Created',
       sortable: true,
-      render: (value) => value ? new Date(value).toLocaleDateString() : '-',
+      render: value => (value ? new Date(String(value)).toLocaleDateString() : '-'),
     },
     {
       key: 'actions',
@@ -145,9 +141,9 @@ const CustomerListPage: React.FC = () => {
         <TableActions
           row={customer}
           actions={createCommonActions({
-            onView: (customer) => navigate(`/customers/${customer.id}`),
-            onEdit: (customer) => navigate(`/customers/${customer.id}/edit`),
-            onDelete: (customer) => handleDeleteCustomer(customer),
+            onView: (customer: CustomerDto) => navigate(`/customers/${customer.id}`),
+            onEdit: (customer: CustomerDto) => navigate(`/customers/${customer.id}/edit`),
+            onDelete: (customer: CustomerDto) => handleDeleteCustomer(customer),
           })}
         />
       ),

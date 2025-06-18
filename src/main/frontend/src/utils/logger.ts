@@ -86,7 +86,7 @@ class Logger {
   /**
    * Log a debug message
    */
-  public debug(message: string, ...args: any[]): void {
+  public debug(message: string, ...args: unknown[]): void {
     if (this.isEnabled(LogLevel.DEBUG)) {
       console.debug(this.formatMessage(LogLevel.DEBUG, message), ...args);
     }
@@ -95,7 +95,7 @@ class Logger {
   /**
    * Log an info message
    */
-  public info(message: string, ...args: any[]): void {
+  public info(message: string, ...args: unknown[]): void {
     if (this.isEnabled(LogLevel.INFO)) {
       console.info(this.formatMessage(LogLevel.INFO, message), ...args);
     }
@@ -104,7 +104,7 @@ class Logger {
   /**
    * Log a warning message
    */
-  public warn(message: string, ...args: any[]): void {
+  public warn(message: string, ...args: unknown[]): void {
     if (this.isEnabled(LogLevel.WARN)) {
       console.warn(this.formatMessage(LogLevel.WARN, message), ...args);
     }
@@ -113,7 +113,7 @@ class Logger {
   /**
    * Log an error message
    */
-  public error(message: string, ...args: any[]): void {
+  public error(message: string, ...args: unknown[]): void {
     if (this.isEnabled(LogLevel.ERROR)) {
       console.error(this.formatMessage(LogLevel.ERROR, message), ...args);
     }

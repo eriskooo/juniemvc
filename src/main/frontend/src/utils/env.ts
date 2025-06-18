@@ -1,6 +1,6 @@
 /**
  * Environment variable utility functions
- * 
+ *
  * This module provides type-safe access to environment variables.
  * All environment variables should be accessed through these functions
  * to ensure consistent handling and type safety.

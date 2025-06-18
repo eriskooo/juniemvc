@@ -53,33 +53,42 @@ export const useFormDialog = () => {
     setDialogState(prev => ({ ...prev, isLoading: loading }));
   }, []);
 
-  const openCreateDialog = useCallback((entityName: string, options?: Partial<FormDialogOptions>) => {
-    openDialog({
-      title: `Create ${entityName}`,
-      description: `Add a new ${entityName.toLowerCase()} to the system`,
-      submitLabel: 'Create',
-      ...options,
-    });
-  }, [openDialog]);
+  const openCreateDialog = useCallback(
+    (entityName: string, options?: Partial<FormDialogOptions>) => {
+      openDialog({
+        title: `Create ${entityName}`,
+        description: `Add a new ${entityName.toLowerCase()} to the system`,
+        submitLabel: 'Create',
+        ...options,
+      });
+    },
+    [openDialog]
+  );
 
-  const openEditDialog = useCallback((entityName: string, options?: Partial<FormDialogOptions>) => {
-    openDialog({
-      title: `Edit ${entityName}`,
-      description: `Update the ${entityName.toLowerCase()} information`,
-      submitLabel: 'Update',
-      ...options,
-    });
-  }, [openDialog]);
+  const openEditDialog = useCallback(
+    (entityName: string, options?: Partial<FormDialogOptions>) => {
+      openDialog({
+        title: `Edit ${entityName}`,
+        description: `Update the ${entityName.toLowerCase()} information`,
+        submitLabel: 'Update',
+        ...options,
+      });
+    },
+    [openDialog]
+  );
 
-  const openViewDialog = useCallback((entityName: string, options?: Partial<FormDialogOptions>) => {
-    openDialog({
-      title: `View ${entityName}`,
-      description: `View ${entityName.toLowerCase()} details`,
-      submitLabel: 'Close',
-      cancelLabel: '',
-      ...options,
-    });
-  }, [openDialog]);
+  const openViewDialog = useCallback(
+    (entityName: string, options?: Partial<FormDialogOptions>) => {
+      openDialog({
+        title: `View ${entityName}`,
+        description: `View ${entityName.toLowerCase()} details`,
+        submitLabel: 'Close',
+        cancelLabel: '',
+        ...options,
+      });
+    },
+    [openDialog]
+  );
 
   return {
     dialogState,

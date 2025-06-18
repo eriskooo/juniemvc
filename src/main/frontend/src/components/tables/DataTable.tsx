@@ -1,4 +1,5 @@
-import React, { useState, useMemo } from 'react';
+import { useState, useMemo } from 'react';
+import type { ReactNode } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/table';
 import { Button } from '../ui/button';
 import { ChevronUp, ChevronDown, ChevronsUpDown } from 'lucide-react';
@@ -7,7 +8,7 @@ export interface Column<T> {
   key: keyof T | string;
   header: string;
   sortable?: boolean;
-  render?: (value: any, row: T, index: number) => React.ReactNode;
+  render?: (value: unknown, row: T, index: number) => ReactNode;
   width?: string;
   align?: 'left' | 'center' | 'right';
 }
@@ -40,7 +41,7 @@ interface DataTableProps<T> {
 /**
  * Reusable data table component with sorting and pagination
  */
-const DataTable = <T extends Record<string, any>>({
+const DataTable = <T extends Record<string, unknown>>({
   data,
   columns,
   loading = false,
@@ -85,12 +86,12 @@ const DataTable = <T extends Record<string, any>>({
   const handleSort = (columnKey: string) => {
     if (!sortable) return;
 
-    const newDirection = 
-      currentSortConfig?.key === columnKey && currentSortConfig.direction === 'asc' 
-        ? 'desc' 
+    const newDirection: 'asc' | 'desc' =
+      currentSortConfig?.key === columnKey && currentSortConfig.direction === 'asc'
+        ? 'desc'
         : 'asc';
 
-    const newSortConfig = { key: columnKey, direction: newDirection };
+    const newSortConfig: SortConfig = { key: columnKey, direction: newDirection };
 
     if (onSort) {
       onSort(newSortConfig);
@@ -103,28 +104,33 @@ const DataTable = <T extends Record<string, any>>({
     if (!sortable) return null;
 
     if (currentSortConfig?.key === columnKey) {
-      return currentSortConfig.direction === 'asc' ? 
-        <ChevronUp className="h-4 w-4" /> : 
-        <ChevronDown className="h-4 w-4" />;
+      return currentSortConfig.direction === 'asc' ? (
+        <ChevronUp className="h-4 w-4" />
+      ) : (
+        <ChevronDown className="h-4 w-4" />
+      );
     }
     return <ChevronsUpDown className="h-4 w-4 opacity-50" />;
   };
 
   const renderCell = (column: Column<T>, row: T, index: number) => {
     const value = typeof column.key === 'string' ? row[column.key] : row[column.key as keyof T];
-    
+
     if (column.render) {
       return column.render(value, row, index);
     }
-    
+
     return value?.toString() || '';
   };
 
   const getAlignmentClass = (align?: string) => {
     switch (align) {
-      case 'center': return 'text-center';
-      case 'right': return 'text-right';
-      default: return 'text-left';
+      case 'center':
+        return 'text-center';
+      case 'right':
+        return 'text-right';
+      default:
+        return 'text-left';
     }
   };
 
@@ -142,7 +148,7 @@ const DataTable = <T extends Record<string, any>>({
         <Table>
           <TableHeader>
             <TableRow>
-              {columns.map((column) => (
+              {columns.map(column => (
                 <TableHead
                   key={column.key.toString()}
                   className={`${getAlignmentClass(column.align)} ${
@@ -169,7 +175,7 @@ const DataTable = <T extends Record<string, any>>({
             ) : (
               sortedData.map((row, index) => (
                 <TableRow key={index}>
-                  {columns.map((column) => (
+                  {columns.map(column => (
                     <TableCell
                       key={column.key.toString()}
                       className={getAlignmentClass(column.align)}
@@ -221,17 +227,17 @@ const TablePagination: React.FC<TablePaginationProps> = ({
           Showing {startItem} to {endItem} of {total} results
         </span>
       </div>
-      
+
       <div className="flex items-center space-x-2">
         {onPageSizeChange && (
           <div className="flex items-center space-x-2">
             <span className="text-sm text-gray-700">Rows per page:</span>
             <select
               value={pageSize}
-              onChange={(e) => onPageSizeChange(Number(e.target.value))}
+              onChange={e => onPageSizeChange(Number(e.target.value))}
               className="border rounded px-2 py-1 text-sm"
             >
-              {pageSizeOptions.map((size) => (
+              {pageSizeOptions.map(size => (
                 <option key={size} value={size}>
                   {size}
                 </option>
@@ -239,7 +245,7 @@ const TablePagination: React.FC<TablePaginationProps> = ({
             </select>
           </div>
         )}
-        
+
         <div className="flex items-center space-x-1">
           <Button
             variant="outline"

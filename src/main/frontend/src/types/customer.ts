@@ -19,7 +19,7 @@ export interface CustomerDto {
   city: string;
   state: string;
   postalCode: string;
-  beerOrders?: any[]; // We'll define a more specific type when implementing the Beer Order Service
+  beerOrders?: import('./beerOrder').BeerOrderDto[];
 }
 
 /**
@@ -51,4 +51,4 @@ export type PageOfCustomerDto = Page<CustomerDto>;
  * Import the Page interface from beer.ts
  * This is a workaround until we move the Page interface to a common location
  */
-import { Page } from './beer';
+import type { Page } from './beer';

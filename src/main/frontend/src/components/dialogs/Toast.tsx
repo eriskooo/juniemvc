@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Button } from '../ui/button';
 import { X, CheckCircle, XCircle, AlertTriangle, Info } from 'lucide-react';
-import { Toast as ToastType } from '../../contexts/ToastContext';
+import type { Toast as ToastType } from '../../contexts/ToastContext';
 
 interface ToastProps {
   toast: ToastType;
@@ -11,7 +11,7 @@ interface ToastProps {
 /**
  * Individual toast notification component
  */
-const Toast: React.FC<ToastProps> = ({ toast, onRemove }) => {
+const Toast = ({ toast, onRemove }: ToastProps) => {
   const [isVisible, setIsVisible] = useState(false);
   const [isExiting, setIsExiting] = useState(false);
 
@@ -86,19 +86,12 @@ const Toast: React.FC<ToastProps> = ({ toast, onRemove }) => {
 
       {/* Content */}
       <div className="flex-1 min-w-0">
-        {toast.title && (
-          <h4 className="text-sm font-medium mb-1">{toast.title}</h4>
-        )}
+        {toast.title && <h4 className="text-sm font-medium mb-1">{toast.title}</h4>}
         <p className="text-sm">{toast.message}</p>
-        
+
         {toast.action && (
           <div className="mt-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={toast.action.onClick}
-              className="text-xs"
-            >
+            <Button variant="outline" size="sm" onClick={toast.action.onClick} className="text-xs">
               {toast.action.label}
             </Button>
           </div>

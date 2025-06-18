@@ -1,6 +1,6 @@
 /**
  * Type definitions
- * 
+ *
  * This module re-exports all type definitions from the types directory.
  */
 
