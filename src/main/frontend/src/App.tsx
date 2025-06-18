@@ -2,6 +2,7 @@ import React, { Suspense } from 'react';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import { RootLayout } from './layouts';
 import { AuthProvider } from './contexts/AuthContext';
+import { ToastProvider } from './contexts/ToastContext';
 import './App.css';
 
 // Lazy load page components for code splitting
@@ -188,7 +189,9 @@ const App: React.FC = () => {
 
   return (
     <AuthProvider>
-      <RouterProvider router={router} />
+      <ToastProvider>
+        <RouterProvider router={router} />
+      </ToastProvider>
     </AuthProvider>
   );
 };

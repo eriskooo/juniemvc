@@ -121,10 +121,60 @@ The command `npm line` is shows lint errors, inspect the lint errors and fix, ve
 -----------------------------------
 Update eslint configuration to disable the warning for `Unused eslint-disable directive`
 
+# Project Building Without Errors
 
+In the frontend project, running the command `npm build` produces the following error, indicating
+a problem with tailwindcss. Inspect error and project to correct the problem.
 
+```error
+Error: Cannot apply unknown utility class `border-border`. Are you using CSS modules or similar and missing `@reference`? https://tailwindcss.com/docs/functions-and-directives#reference-directive
+    at onInvalidCandidate (/Users/jt/src/springframework.guru/courses/junie/juniemvc/src/main/frontend/node_modules/tailwindcss/dist/lib.js:18:1312)
+    at ge (/Users/jt/src/springframework.guru/courses/junie/juniemvc/src/main/frontend/node_modules/tailwindcss/dist/lib.js:13:29803)
+    at /Users/jt/src/springframework.guru/courses/junie/juniemvc/src/main/frontend/node_modules/tailwindcss/dist/lib.js:18:373
+    at I (/Users/jt/src/springframework.guru/courses/junie/juniemvc/src/main/frontend/node_modules/tailwindcss/dist/lib.js:3:1656)
+    at je (/Users/jt/src/springframework.guru/courses/junie/juniemvc/src/main/frontend/node_modules/tailwindcss/dist/lib.js:18:172)
+    at bi (/Users/jt/src/springframework.guru/courses/junie/juniemvc/src/main/frontend/node_modules/tailwindcss/dist/lib.js:35:780)
+    at async yi (/Users/jt/src/springframework.guru/courses/junie/juniemvc/src/main/frontend/node_modules/tailwindcss/dist/lib.js:35:1123)
+    at async _r (/Users/jt/src/springframework.guru/courses/junie/juniemvc/src/main/frontend/node_modules/@tailwindcss/node/dist/index.js:10:3384)
+    at async p (/Users/jt/src/springframework.guru/courses/junie/juniemvc/src/main/frontend/node_modules/@tailwindcss/postcss/dist/index.js:10:4019)
+    at async Object.Once (/Users/jt/src/springframework.guru/courses/junie/juniemvc/src/main/frontend/node_modules/@tailwindcss/postcss/dist/index.js:10:4290)
+    at async LazyResult.runAsync (/Users/jt/src/springframework.guru/courses/junie/juniemvc/src/main/frontend/node_modules/postcss/lib/lazy-result.js:293:11)
+    at async runPostCSS (file:///Users/jt/src/springframework.guru/courses/junie/juniemvc/src/main/frontend/node_modules/vite/dist/node/chunks/dep-DBxKXgDP.js:43824:21)
+    at async compilePostCSS (file:///Users/jt/src/springframework.guru/courses/junie/juniemvc/src/main/frontend/node_modules/vite/dist/node/chunks/dep-DBxKXgDP.js:43794:18)
+    at async compileCSS (file:///Users/jt/src/springframework.guru/courses/junie/juniemvc/src/main/frontend/node_modules/vite/dist/node/chunks/dep-DBxKXgDP.js:43649:27)
+    at async TransformPluginContext.handler (file:///Users/jt/src/springframework.guru/courses/junie/juniemvc/src/main/frontend/node_modules/vite/dist/node/chunks/dep-DBxKXgDP.js:42965:11)
+    at async EnvironmentPluginContainer.transform (file:///Users/jt/src/springframework.guru/courses/junie/juniemvc/src/main/frontend/node_modules/vite/dist/node/chunks/dep-DBxKXgDP.js:42294:18)
+    at async loadAndTransform (file:///Users/jt/src/springframework.guru/courses/junie/juniemvc/src/main/frontend/node_modules/vite/dist/node/chunks/dep-DBxKXgDP.js:35735:27)
+```
 
+------------------------
 
+Running the front end application produces the following error. Inspect error. Fix frontend 
+code and tests. Verify the frontend project builds and all tests are passing.
+
+```error
+Error: useToast must be used within a ToastProvider
+    at useToast (http://localhost:3000/src/hooks/useToast.ts:6:11)
+    at BeerOrderListPage (http://localhost:3000/src/pages/beerOrders/BeerOrderListPage.tsx:30:30)
+    at react-stack-bottom-frame (http://localhost:3000/node_modules/.vite/deps/react-dom_client.js?v=93637eae:17424:20)
+    at renderWithHooks (http://localhost:3000/node_modules/.vite/deps/react-dom_client.js?v=93637eae:4206:24)
+    at updateFunctionComponent (http://localhost:3000/node_modules/.vite/deps/react-dom_client.js?v=93637eae:6619:21)
+    at beginWork (http://localhost:3000/node_modules/.vite/deps/react-dom_client.js?v=93637eae:7613:199)
+    at runWithFiberInDEV (http://localhost:3000/node_modules/.vite/deps/react-dom_client.js?v=93637eae:1485:72)
+    at performUnitOfWork (http://localhost:3000/node_modules/.vite/deps/react-dom_client.js?v=93637eae:10868:98)
+    at workLoopSync (http://localhost:3000/node_modules/.vite/deps/react-dom_client.js?v=93637eae:10728:43)
+    at renderRootSync (http://localhost:3000/node_modules/.vite/deps/react-dom_client.js?v=93637eae:10711:13)
+```
+
+-----------------
+Inspect the frontend project. The styling for radix and shadcn is not working properly. Make necesary
+updates to fix. Verify the project builds and tests without errors.
+
+-------------------
+Inspect the frontend project. The styling for radix and shadcn is not working properly. Verify tailwindcss
+version 4 is properly setup for use with radix and shadcn components. Verify plugins for radix are
+installed and configured properly. Make necessary updates to fix. 
+Verify the project builds and tests without errors.
 
 
 
