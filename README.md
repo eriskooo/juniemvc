@@ -57,3 +57,76 @@ Got a question about your Spring Framework 6 course? [Checkout these FAQs!](http
 * Like Spring Framework Guru on [Facebook](https://www.facebook.com/springframeworkguru/)
 * Follow Spring Framework Guru on [Twitter](https://twitter.com/spring_guru)
 * Connect with John Thompson on [LinkedIn](http://www.linkedin.com/in/springguru)
+
+---
+
+## Build, Run, and Local PostgreSQL Setup
+
+This project is ready to produce a runnable Spring Boot fat JAR and uses Flyway to manage the database schema and seed base data.
+
+### 1) Prepare PostgreSQL locally
+
+Run the provided helper script with a superuser (for example, the default `postgres` user):
+
+```
+psql -U postgres -h localhost -f scripts/create_postgres.sql
+```
+
+What the script does:
+- Creates a login role `juniemvc` with password `postgres` if it does not exist.
+- Creates a database `juniemvc` owned by `juniemvc` if it does not exist.
+
+You can continue using the default `postgres` user, or switch the app to use the `juniemvc` user by setting environment variables before startup:
+
+Windows PowerShell examples:
+```
+$env:SPRING_DATASOURCE_USERNAME = "juniemvc"
+$env:SPRING_DATASOURCE_PASSWORD = "postgres"
+```
+
+Linux/macOS examples:
+```
+export SPRING_DATASOURCE_USERNAME=juniemvc
+export SPRING_DATASOURCE_PASSWORD=postgres
+```
+
+By default, the app points to:
+- URL: `jdbc:postgresql://localhost:5432/juniemvc`
+- Username: `postgres`
+- Password: `postgres`
+
+These can be overridden using the environment variables above or by editing `src/main/resources/application.properties`.
+
+### 2) Build the executable JAR
+
+Using the included Maven Wrapper:
+
+Windows:
+```
+mvnw.cmd -DskipTests package
+```
+
+Linux/macOS:
+```
+./mvnw -DskipTests package
+```
+
+The runnable JAR will be created at:
+```
+target/juniemvc-0.0.1-SNAPSHOT.jar
+```
+
+### 3) Run the application
+
+```
+java -jar target/juniemvc-0.0.1-SNAPSHOT.jar
+```
+
+On startup, Flyway runs the migrations located in `src/main/resources/db/migration`:
+- `V1__init.sql` creates the `beer` table.
+- `V2__insert_base_beers.sql` inserts five world‑known beers as seed data.
+
+When the app is running locally:
+- REST API base path: `http://localhost:8080/api/beers`
+- Swagger UI: `http://localhost:8080/swagger-ui.html` (or `/swagger-ui/index.html`)
+- OpenAPI JSON: `http://localhost:8080/v3/api-docs`
