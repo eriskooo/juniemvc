@@ -4,18 +4,16 @@ import guru.springframework.juniemvc.domain.Beer;
 import guru.springframework.juniemvc.repositories.BeerRepository;
 import guru.springframework.juniemvc.services.BeerService;
 import guru.springframework.juniemvc.web.NotFoundException;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class BeerServiceImpl implements BeerService {
 
     private final BeerRepository beerRepository;
-
-    public BeerServiceImpl(BeerRepository beerRepository) {
-        this.beerRepository = beerRepository;
-    }
 
     @Override
     public List<Beer> listAll() {
@@ -46,6 +44,12 @@ public class BeerServiceImpl implements BeerService {
         Beer existing = beerRepository.findById(id).orElseThrow(() -> new NotFoundException("Beer not found: " + id));
         existing.setDescription(beer.getDescription());
         existing.setAbv(beer.getAbv());
+        // copy newly added optional fields
+        existing.setName(beer.getName());
+        existing.setStyle(beer.getStyle());
+        existing.setIbu(beer.getIbu());
+        existing.setBrewery(beer.getBrewery());
+        existing.setVolumeMl(beer.getVolumeMl());
         return beerRepository.save(existing);
     }
 

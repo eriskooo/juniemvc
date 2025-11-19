@@ -3,6 +3,7 @@ package guru.springframework.juniemvc.web;
 import guru.springframework.juniemvc.domain.Beer;
 import guru.springframework.juniemvc.services.BeerService;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -14,13 +15,10 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/beers")
 @Validated
+@RequiredArgsConstructor
 public class BeerController {
 
     private final BeerService beerService;
-
-    public BeerController(BeerService beerService) {
-        this.beerService = beerService;
-    }
 
     @GetMapping
     public List<Beer> list(@RequestParam(value = "q", required = false) String q) {
